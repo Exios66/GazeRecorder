@@ -534,38 +534,65 @@
         // Initialize soundboard with proper audio handling
         const SOUND_EFFECTS = {
             beep: { 
-                url: 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU9vT18=', 
                 label: 'Beep',
-                duration: 0.5
+                duration: 0.5,
+                frequency: 440 // A4 note
             },
             click: { 
-                url: 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU9vT18=', 
                 label: 'Click',
-                duration: 0.2
+                duration: 0.2,
+                frequency: 880 // A5 note
             },
             ding: { 
-                url: 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU9vT18=', 
                 label: 'Ding',
-                duration: 0.8
+                duration: 0.8,
+                frequency: 523.25 // C5 note
             }
         };
 
         class SoundboardManager {
             constructor() {
-                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                this.audioContext = null;
                 this.soundBuffers = {};
                 this.isInitialized = false;
+                this.outputDevice = null;
             }
 
             async initialize() {
                 if (this.isInitialized) return;
 
                 try {
+                    // Create audio context with proper options for system audio output
+                    const contextOptions = {
+                        latencyHint: 'interactive',
+                        sampleRate: 48000
+                    };
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)(contextOptions);
+
+                    // Get list of available audio output devices
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+                    
+                    // Log available audio outputs for debugging
+                    logger.info('Available audio outputs:', audioOutputs.map(d => `${d.label} (${d.deviceId})`));
+
+                    // Try to get the default audio output device
+                    if (audioOutputs.length > 0) {
+                        const defaultDevice = audioOutputs.find(d => d.deviceId === 'default') || audioOutputs[0];
+                        await this.setAudioOutput(defaultDevice.deviceId);
+                    }
+
+                    // Create sound buffers
                     for (const [key, sound] of Object.entries(SOUND_EFFECTS)) {
-                        // Create oscillator-based sounds instead of loading from URL
                         const buffer = await this.createSoundBuffer(sound);
                         this.soundBuffers[key] = buffer;
                     }
+
+                    // Add device change listener
+                    navigator.mediaDevices.addEventListener('devicechange', async () => {
+                        await this.handleDeviceChange();
+                    });
+
                     this.isInitialized = true;
                     logger.info('Soundboard initialized successfully');
                 } catch (error) {
@@ -574,30 +601,98 @@
                 }
             }
 
-            async createSoundBuffer({ duration }) {
+            async handleDeviceChange() {
+                try {
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+                    
+                    // If current output device is not in the list, switch to default
+                    if (this.outputDevice && !audioOutputs.find(d => d.deviceId === this.outputDevice)) {
+                        const defaultDevice = audioOutputs.find(d => d.deviceId === 'default') || audioOutputs[0];
+                        if (defaultDevice) {
+                            await this.setAudioOutput(defaultDevice.deviceId);
+                        }
+                    }
+                } catch (error) {
+                    logger.error('Error handling device change', error);
+                }
+            }
+
+            async setAudioOutput(deviceId) {
+                try {
+                    // For browsers that support setSinkId
+                    if (typeof HTMLAudioElement.prototype.setSinkId === 'function') {
+                        // Create a dummy audio element to set the sink ID
+                        const audio = new Audio();
+                        await audio.setSinkId(deviceId);
+                        this.outputDevice = deviceId;
+                        logger.info(`Audio output set to device: ${deviceId}`);
+                    } else {
+                        // Fallback for browsers that don't support setSinkId
+                        this.outputDevice = 'default';
+                        logger.warn('setSinkId not supported, using default audio output');
+                    }
+                } catch (error) {
+                    logger.error('Error setting audio output', error);
+                    this.outputDevice = 'default';
+                }
+            }
+
+            async createSoundBuffer({ duration, frequency = 440 }) {
                 const sampleRate = this.audioContext.sampleRate;
-                const buffer = this.audioContext.createBuffer(1, duration * sampleRate, sampleRate);
-                const channelData = buffer.getChannelData(0);
+                const buffer = this.audioContext.createBuffer(2, duration * sampleRate, sampleRate);
                 
-                // Create a simple sine wave
-                for (let i = 0; i < buffer.length; i++) {
-                    channelData[i] = Math.sin(440 * Math.PI * 2 * i / sampleRate) *
-                        Math.exp(-5 * i / buffer.length); // Add decay
+                // Create stereo sound (2 channels)
+                for (let channel = 0; channel < 2; channel++) {
+                    const channelData = buffer.getChannelData(channel);
+                    for (let i = 0; i < buffer.length; i++) {
+                        // Create a more complex waveform with harmonics
+                        const t = i / sampleRate;
+                        const fundamental = Math.sin(2 * Math.PI * frequency * t);
+                        const harmonic1 = Math.sin(2 * Math.PI * (frequency * 2) * t) * 0.5;
+                        const harmonic2 = Math.sin(2 * Math.PI * (frequency * 3) * t) * 0.25;
+                        
+                        channelData[i] = (fundamental + harmonic1 + harmonic2) *
+                            Math.exp(-5 * i / buffer.length); // Add decay
+                    }
                 }
                 
                 return buffer;
             }
 
-            playSound(soundKey) {
+            async playSound(soundKey) {
                 if (!this.isInitialized || !this.soundBuffers[soundKey]) {
                     logger.warn(`Sound ${soundKey} not initialized`);
                     return;
                 }
 
-                const source = this.audioContext.createBufferSource();
-                source.buffer = this.soundBuffers[soundKey];
-                source.connect(this.audioContext.destination);
-                source.start();
+                try {
+                    // Resume audio context if it's suspended
+                    if (this.audioContext.state === 'suspended') {
+                        await this.audioContext.resume();
+                    }
+
+                    const source = this.audioContext.createBufferSource();
+                    const gainNode = this.audioContext.createGain();
+                    const stereoPanner = this.audioContext.createStereoPanner();
+                    
+                    source.buffer = this.soundBuffers[soundKey];
+                    
+                    // Create audio processing chain
+                    source
+                        .connect(gainNode)
+                        .connect(stereoPanner)
+                        .connect(this.audioContext.destination);
+
+                    // Add slight stereo effect
+                    stereoPanner.pan.value = Math.random() * 0.4 - 0.2; // Random pan between -0.2 and 0.2
+                    
+                    // Start the sound
+                    source.start();
+                    logger.info(`Playing sound: ${soundKey}`);
+                } catch (error) {
+                    logger.error(`Error playing sound: ${soundKey}`, error);
+                }
             }
         }
 
