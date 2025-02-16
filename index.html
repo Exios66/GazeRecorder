@@ -186,23 +186,101 @@
         }
 
         .secondary-panel {
-            background: var(--surface-secondary);
-            border: 1px solid var(--border-color);
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--surface-primary);
+            padding: 15px;
+            border-radius: 12px;
             box-shadow: 0 4px 12px var(--shadow-color);
+            width: 250px;
+            z-index: 1000;
+            transform: translateX(110%);
+            transition: transform var(--transition-speed) var(--transition-timing);
+        }
+
+        .secondary-panel.visible {
+            transform: translateX(0);
+        }
+
+        .panel-section {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .panel-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .panel-section h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .timer-display {
-            background: var(--surface-tertiary);
-            color: var(--text-primary);
             font-family: 'SF Mono', 'Consolas', monospace;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
+            font-size: 20px;
+            padding: 8px;
+            background: var(--surface-secondary);
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .timer-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .timer-controls button {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: var(--accent);
+        }
+
+        .sound-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
         }
 
         .sound-button {
+            padding: 8px;
+            font-size: 12px;
             background: var(--accent);
             color: var(--surface-primary);
+        }
+
+        .toggle-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--accent);
+            color: var(--surface-primary);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            z-index: 999;
+            border: none;
+            width: auto;
+            font-size: 14px;
+        }
+
+        .sound-button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: var(--accent);
+            color: var(--surface-primary);
+            cursor: pointer;
+            transition: background 0.3s;
         }
 
         .sound-button:hover {
@@ -478,109 +556,85 @@
             background: var(--surface-primary);
             padding: 15px;
             border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
-            width: 300px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            width: 250px;
             z-index: 1000;
-            display: none;
+            transform: translateX(110%);
+            transition: transform var(--transition-speed) var(--transition-timing);
         }
 
-        .precision-timer-section,
-        .soundboard-section {
-            margin-bottom: 20px;
+        .secondary-panel.visible {
+            transform: translateX(0);
+        }
+
+        .panel-section {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .panel-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .panel-section h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .timer-display {
-            font-family: monospace;
-            font-size: 24px;
-            margin: 10px 0;
-            padding: 10px;
-            background: rgba(0,0,0,0.1);
-            border-radius: 5px;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 20px;
+            padding: 8px;
+            background: var(--surface-secondary);
+            border-radius: 6px;
             text-align: center;
+            margin-bottom: 8px;
         }
 
         .timer-controls {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 5px;
-            margin-bottom: 10px;
+            gap: 8px;
         }
 
-        .lap-times {
-            max-height: 150px;
-            overflow-y: auto;
-            font-family: monospace;
+        .timer-controls button {
+            padding: 6px 12px;
             font-size: 12px;
+            background: var(--accent);
         }
 
-        .sound-buttons {
+        .sound-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 5px;
-            margin-bottom: 10px;
+            gap: 8px;
         }
 
         .sound-button {
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
+            padding: 8px;
+            font-size: 12px;
             background: var(--accent);
             color: var(--surface-primary);
+        }
+
+        .toggle-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--accent);
+            color: var(--surface-primary);
+            padding: 8px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .sound-button:hover {
-            background: var(--accent-light);
-        }
-
-        .sound-button:active {
-            background: var(--accent-dark);
-        }
-
-        .bluetooth-controls {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .bluetooth-status {
-            font-size: 12px;
-            margin-top: 5px;
-            text-align: center;
-        }
-
-        .audio-controls {
-            margin-top: 15px;
-        }
-
-        .volume-control {
-            margin-bottom: 15px;
-        }
-
-        .volume-control label {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .volume-control input[type="range"] {
-            width: 100%;
-            margin-bottom: 5px;
-        }
-
-        .audio-meter {
-            height: 10px;
-            background: #ddd;
-            border-radius: 5px;
-            overflow: hidden;
-            margin-top: 5px;
-        }
-
-        .audio-meter .meter-fill {
-            height: 100%;
-            width: 0%;
-            background: var(--button-bg);
-            transition: width 0.1s ease;
+            z-index: 999;
+            border: none;
+            width: auto;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -655,33 +709,28 @@
         <video id="previewVideo" autoplay muted></video>
     </div>
 
+    <div class="toggle-panel" onclick="toggleSecondaryPanel()">
+        Tools
+    </div>
+
     <div class="secondary-panel">
-        <div class="precision-timer-section">
-            <h3>Precision Timer</h3>
+        <div class="panel-section">
+            <h3>Timer</h3>
             <div class="timer-display">00:00:00.000</div>
             <div class="timer-controls">
                 <button id="timerStart">Start</button>
                 <button id="timerStop">Stop</button>
-                <button id="timerLap">Lap</button>
                 <button id="timerReset">Reset</button>
+                <button id="timerLap">Lap</button>
             </div>
-            <div class="lap-times"></div>
         </div>
 
-        <div class="soundboard-section">
+        <div class="panel-section">
             <h3>Soundboard</h3>
-            <div class="sound-buttons">
-                ${Object.entries(SOUND_EFFECTS).map(([key, sound]) => `
-                    <button class="sound-button" data-sound="${key}">
-                        ${sound.label}
-                    </button>
-                `).join('')}
-            </div>
-            <div class="bluetooth-controls">
-                <button id="bluetoothConnect">
-                    Connect Bluetooth Audio
-                </button>
-                <div class="bluetooth-status">Not Connected</div>
+            <div class="sound-grid">
+                <button class="sound-button" data-sound="beep">Beep</button>
+                <button class="sound-button" data-sound="click">Click</button>
+                <button class="sound-button" data-sound="ding">Ding</button>
             </div>
         </div>
     </div>
@@ -1231,57 +1280,215 @@
                 // Create initial blob
                 const blob = new Blob(chunks, { type: 'video/webm' });
                 
-                // Compress if file is too large (>100MB)
-                if (blob.size > 100 * 1024 * 1024) {
-                    return new Promise((resolve, reject) => {
-                        compressionWorker.onmessage = (e) => {
-                            if (e.data.success) {
-                                resolve(e.data.blob);
-                            } else {
-                                reject(new Error(e.data.error));
+                // Show export dialog
+                const exportDialog = document.createElement('div');
+                exportDialog.className = 'export-dialog';
+                exportDialog.innerHTML = `
+                    <div class="export-content">
+                        <h3>Export Recording</h3>
+                        <div class="export-options">
+                            <div class="option-group">
+                                <label for="exportFormat">Format</label>
+                                <select id="exportFormat">
+                                    <option value="webm">WebM (Best Quality)</option>
+                                    <option value="mp4">MP4 (Most Compatible)</option>
+                                </select>
+                            </div>
+                            <div class="option-group">
+                                <label for="exportQuality">Quality</label>
+                                <select id="exportQuality">
+                                    <option value="high">High (Original)</option>
+                                    <option value="medium">Medium (Compressed)</option>
+                                    <option value="low">Low (Smaller File)</option>
+                                </select>
+                            </div>
+                            <div class="option-group">
+                                <label for="exportFilename">Filename</label>
+                                <input type="text" id="exportFilename" 
+                                    value="recording-${new Date().toISOString().slice(0,19).replace(/[:-]/g, '')}"
+                                    pattern="[a-zA-Z0-9-_]+"
+                                    title="Only letters, numbers, hyphens and underscores are allowed">
+                            </div>
+                        </div>
+                        <div class="export-info">
+                            <span>Original Size: ${(blob.size / (1024 * 1024)).toFixed(1)} MB</span>
+                            <span id="estimatedSize"></span>
+                        </div>
+                        <div class="export-actions">
+                            <button id="startExport">Export</button>
+                            <button id="cancelExport">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(exportDialog);
+
+                return new Promise((resolve, reject) => {
+                    const startExport = document.getElementById('startExport');
+                    const cancelExport = document.getElementById('cancelExport');
+                    const formatSelect = document.getElementById('exportFormat');
+                    const qualitySelect = document.getElementById('exportQuality');
+                    const filenameInput = document.getElementById('exportFilename');
+                    
+                    // Update estimated size
+                    function updateEstimatedSize() {
+                        const quality = qualitySelect.value;
+                        const format = formatSelect.value;
+                        let estimatedSize = blob.size;
+                        
+                        if (quality === 'medium') estimatedSize *= 0.6;
+                        if (quality === 'low') estimatedSize *= 0.3;
+                        if (format === 'mp4') estimatedSize *= 1.2;
+                        
+                        document.getElementById('estimatedSize').textContent = 
+                            `Estimated Size: ${(estimatedSize / (1024 * 1024)).toFixed(1)} MB`;
+                    }
+                    
+                    formatSelect.addEventListener('change', updateEstimatedSize);
+                    qualitySelect.addEventListener('change', updateEstimatedSize);
+                    updateEstimatedSize();
+
+                    startExport.addEventListener('click', async () => {
+                        try {
+                            const format = formatSelect.value;
+                            const quality = qualitySelect.value;
+                            let filename = filenameInput.value.trim();
+                            
+                            // Sanitize filename and ensure it has proper extension
+                            filename = filename.replace(/[^a-zA-Z0-9-_]/g, '-');
+                            if (!filename) filename = `recording-${Date.now()}`;
+                            const extension = format === 'mp4' ? '.mp4' : '.webm';
+                            if (!filename.toLowerCase().endsWith(extension)) {
+                                filename += extension;
                             }
-                        };
-                        compressionWorker.postMessage({ chunks, quality });
+                            
+                            // Show processing dialog
+                            const processingDialog = document.createElement('div');
+                            processingDialog.className = 'processing-dialog';
+                            processingDialog.innerHTML = `
+                                <div class="processing-content">
+                                    <h3>Processing Recording</h3>
+                                    <div class="progress-bar">
+                                        <div class="progress"></div>
+                                    </div>
+                                    <div class="processing-status">Preparing export...</div>
+                                </div>
+                            `;
+                            document.body.appendChild(processingDialog);
+                            
+                            // Process the recording
+                            let processedBlob = blob;
+                            if (quality !== 'high' || format === 'mp4') {
+                                processedBlob = await processRecording(blob, format, quality, (progress) => {
+                                    const progressBar = processingDialog.querySelector('.progress');
+                                    const status = processingDialog.querySelector('.processing-status');
+                                    progressBar.style.width = `${progress * 100}%`;
+                                    status.textContent = `Processing: ${Math.round(progress * 100)}%`;
+                                });
+                            }
+                            
+                            // Force download using a temporary anchor element
+                            const downloadUrl = URL.createObjectURL(processedBlob);
+                            const downloadLink = document.createElement('a');
+                            downloadLink.style.display = 'none';
+                            downloadLink.href = downloadUrl;
+                            downloadLink.download = filename; // This forces download instead of opening in new tab
+                            document.body.appendChild(downloadLink);
+                            
+                            // Trigger download
+                            downloadLink.click();
+                            
+                            // Cleanup
+                            setTimeout(() => {
+                                URL.revokeObjectURL(downloadUrl);
+                                document.body.removeChild(downloadLink);
+                            }, 100);
+                            
+                            document.body.removeChild(exportDialog);
+                            document.body.removeChild(processingDialog);
+                            
+                            // Log success
+                            logger.info(`Recording exported successfully: ${filename} (${(processedBlob.size / (1024 * 1024)).toFixed(1)} MB)`);
+                            
+                            resolve(processedBlob);
+                        } catch (error) {
+                            logger.error('Export failed', error);
+                            reject(error);
+                            document.body.removeChild(exportDialog);
+                            alert(`Export failed: ${error.message}`);
+                        }
                     });
-                }
-                
-                return blob;
+
+                    cancelExport.addEventListener('click', () => {
+                        document.body.removeChild(exportDialog);
+                        resolve(blob); // Return original blob if cancelled
+                    });
+                });
             } catch (error) {
                 logger.error('Error preparing recording for download', error);
                 throw error;
             }
         }
 
-        // Enhanced recording preview
-        function showRecordingPreview(blob) {
-            const previewModal = document.createElement('div');
-            previewModal.className = 'preview-modal';
-            previewModal.innerHTML = `
-                <div class="preview-content">
-                    <video controls src="${URL.createObjectURL(blob)}"></video>
-                    <div class="export-options">
-                        <h3>Export Options</h3>
-                        <select id="exportFormat">
-                            <option value="webm">WebM (Best Quality)</option>
-                            <option value="mp4">MP4 (Most Compatible)</option>
-                            <option value="gif">GIF (Small Size)</option>
-                        </select>
-                        <select id="exportQuality">
-                            <option value="0.8">High Quality</option>
-                            <option value="0.6">Medium Quality</option>
-                            <option value="0.4">Low Quality (Smaller Size)</option>
-                        </select>
-                    </div>
-                    <div class="preview-controls">
-                        <button onclick="saveRecording(
-                            document.getElementById('exportFormat').value,
-                            parseFloat(document.getElementById('exportQuality').value)
-                        )">Save</button>
-                        <button onclick="discardRecording()">Discard</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(previewModal);
+        async function processRecording(blob, format, quality, progressCallback) {
+            try {
+                // Create video element to process the recording
+                const video = document.createElement('video');
+                video.src = URL.createObjectURL(blob);
+                await video.load();
+                
+                // Create canvas for processing
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set quality parameters
+                const qualitySettings = {
+                    high: { bitrate: 2500000, scale: 1 },
+                    medium: { bitrate: 1500000, scale: 0.75 },
+                    low: { bitrate: 800000, scale: 0.5 }
+                };
+                
+                const settings = qualitySettings[quality];
+                canvas.width = video.videoWidth * settings.scale;
+                canvas.height = video.videoHeight * settings.scale;
+                
+                // Process the video
+                const chunks = [];
+                const stream = canvas.captureStream();
+                const recorder = new MediaRecorder(stream, {
+                    mimeType: format === 'mp4' ? 'video/mp4' : 'video/webm',
+                    videoBitsPerSecond: settings.bitrate
+                });
+                
+                recorder.ondataavailable = e => chunks.push(e.data);
+                
+                return new Promise((resolve, reject) => {
+                    recorder.onstop = () => {
+                        const processedBlob = new Blob(chunks, { type: format === 'mp4' ? 'video/mp4' : 'video/webm' });
+                        resolve(processedBlob);
+                    };
+                    
+                    video.onplay = () => {
+                        const processFrame = () => {
+                            if (video.paused || video.ended) {
+                                recorder.stop();
+                                return;
+                            }
+                            
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            progressCallback?.(video.currentTime / video.duration);
+                            requestAnimationFrame(processFrame);
+                        };
+                        
+                        recorder.start();
+                        processFrame();
+                    };
+                    
+                    video.play();
+                });
+            } catch (error) {
+                logger.error('Error processing recording', error);
+                throw error;
+            }
         }
 
         // Initialize the application
@@ -1618,12 +1825,49 @@
         `;
         document.head.appendChild(style);
 
+        // Secondary panel functionality
+        function toggleSecondaryPanel() {
+            const panel = document.querySelector('.secondary-panel');
+            panel.classList.toggle('visible');
+        }
+
         // Initialize the secondary panel
         async function initializeSecondaryPanel() {
             try {
                 await soundboardManager.initialize();
+                const precisionTimer = new PrecisionTimer();
+                const timerDisplay = document.querySelector('.timer-display');
+                
+                // Timer controls
+                document.getElementById('timerStart').addEventListener('click', () => {
+                    precisionTimer.start();
+                    updateTimer();
+                });
 
-                // Initialize soundboard buttons
+                document.getElementById('timerStop').addEventListener('click', () => {
+                    precisionTimer.stop();
+                });
+
+                document.getElementById('timerReset').addEventListener('click', () => {
+                    precisionTimer.reset();
+                    timerDisplay.textContent = '00:00:00.000';
+                });
+
+                document.getElementById('timerLap').addEventListener('click', () => {
+                    if (precisionTimer.isRunning) {
+                        const time = precisionTimer.getFormattedTime();
+                        logger.info(`Lap time: ${time}`);
+                    }
+                });
+
+                function updateTimer() {
+                    if (precisionTimer.isRunning) {
+                        timerDisplay.textContent = precisionTimer.getFormattedTime();
+                        requestAnimationFrame(updateTimer);
+                    }
+                }
+
+                // Soundboard
                 document.querySelectorAll('.sound-button').forEach(button => {
                     button.addEventListener('click', () => {
                         const soundKey = button.dataset.sound;
@@ -1631,37 +1875,10 @@
                     });
                 });
 
-                // Initialize Bluetooth controls
-                const bluetoothButton = document.getElementById('bluetoothConnect');
-                const bluetoothStatus = document.querySelector('.bluetooth-status');
-
-                bluetoothButton.addEventListener('click', async () => {
-                    if (!bluetoothManager.isConnected()) {
-                        bluetoothStatus.textContent = 'Connecting...';
-                        bluetoothStatus.style.color = 'var(--text-primary)';
-                        
-                        const connected = await bluetoothManager.connect();
-                        
-                        bluetoothStatus.textContent = connected ? 'Connected' : 'Connection failed';
-                        bluetoothStatus.style.color = connected ? 
-                            'var(--primary)' : 'var(--record-button)';
-                        
-                        bluetoothButton.textContent = connected ?
-                            'Disconnect Bluetooth' : 'Connect Bluetooth Audio';
-                    } else {
-                        bluetoothManager.disconnect();
-                        bluetoothStatus.textContent = 'Disconnected';
-                        bluetoothStatus.style.color = 'var(--text-primary)';
-                        bluetoothButton.textContent = 'Connect Bluetooth Audio';
-                    }
-                });
-
             } catch (error) {
                 logger.error('Error initializing secondary panel', error);
                 document.querySelector('.secondary-panel').innerHTML = `
-                    <div class="error-message">
-                        Failed to initialize audio features: ${error.message}
-                    </div>
+                    <div class="error-message">Failed to initialize tools: ${error.message}</div>
                 `;
             }
         }
