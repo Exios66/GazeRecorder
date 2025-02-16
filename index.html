@@ -155,6 +155,208 @@
             border-radius: 50%;
             font-weight: bold;
         }
+
+        .processing-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .processing-content {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress {
+            width: 0%;
+            height: 100%;
+            background: var(--button-bg);
+            transition: width 0.3s;
+        }
+
+        .export-options {
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        .export-options select {
+            width: 100%;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .quality-settings {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 8px;
+        }
+
+        .quality-section {
+            margin-bottom: 15px;
+        }
+
+        .quality-section h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .quality-select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--button-bg);
+        }
+
+        .custom-quality-options {
+            padding: 10px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .custom-quality-options label {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .custom-quality-options input,
+        .custom-quality-options select {
+            width: 100%;
+            padding: 6px;
+            margin-top: 4px;
+            border-radius: 4px;
+            border: 1px solid var(--button-bg);
+        }
+
+        .audio-meters {
+            margin-top: 10px;
+        }
+
+        .meter-container {
+            margin-bottom: 8px;
+        }
+
+        .audio-meter {
+            height: 10px;
+            background: #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .audio-meter::before {
+            content: '';
+            display: block;
+            height: 100%;
+            width: 0%;
+            background: var(--button-bg);
+            transition: width 0.1s ease;
+        }
+
+        #estimated-size {
+            font-size: 12px;
+            color: var(--text-color);
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        /* Secondary Panel Styles */
+        .secondary-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            width: 300px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .precision-timer-section,
+        .soundboard-section {
+            margin-bottom: 20px;
+        }
+
+        .timer-display {
+            font-family: monospace;
+            font-size: 24px;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .timer-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .lap-times {
+            max-height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .sound-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .sound-button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: var(--button-bg);
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .sound-button:hover {
+            background: var(--button-hover);
+        }
+
+        .bluetooth-controls {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .bluetooth-status {
+            font-size: 12px;
+            margin-top: 5px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -163,18 +365,60 @@
 
         <button id="toggleTheme">Toggle Dark/Light Mode</button>
 
-        <label for="video-quality">Video Quality:</label>
-        <select id="video-quality">
-            <option value="hd">HD</option>
-            <option value="sd">SD</option>
-        </select>
+        <div class="quality-settings">
+            <div class="quality-section">
+                <h3>Video Settings</h3>
+                <select id="video-quality" class="quality-select" title="Video Quality">
+                    <option value="hd">HD</option>
+                    <option value="sd">SD</option>
+                </select>
+                <div class="custom-quality-options" style="display: none;">
+                    <label>Frame Rate:
+                        <input type="number" id="custom-framerate" min="1" max="60" value="30">
+                    </label>
+                    <label>Resolution:
+                        <select id="custom-resolution">
+                            <option value="3840x2160">4K (3840x2160)</option>
+                            <option value="1920x1080">1080p (1920x1080)</option>
+                            <option value="1280x720">720p (1280x720)</option>
+                            <option value="854x480">480p (854x480)</option>
+                            <option value="640x360">360p (640x360)</option>
+                        </select>
+                    </label>
+                    <label>Bitrate (Mbps):
+                        <input type="number" id="custom-bitrate" min="0.1" max="20" step="0.1" value="2.5">
+                    </label>
+                </div>
+            </div>
 
-        <label for="audio-input">Audio Source:</label>
-        <select id="audio-input">
-            <option value="microphone">Microphone</option>
-            <option value="system">System Audio</option>
-            <option value="none">No Audio</option>
-        </select>
+            <div class="quality-section">
+                <h3>Audio Settings</h3>
+                <select id="audio-source" class="quality-select" title="Audio Source">
+                    <option value="both">Microphone + System Audio</option>
+                    <option value="microphone">Microphone Only</option>
+                    <option value="system">System Audio Only</option>
+                    <option value="none">No Audio</option>
+                </select>
+                
+                <select id="audio-quality" class="quality-select" title="Audio Quality">
+                    <option value="studio">Studio Quality</option>
+                    <option value="high">High Quality</option>
+                    <option value="medium">Medium Quality</option>
+                    <option value="low">Low Quality</option>
+                </select>
+                
+                <div class="audio-meters">
+                    <div class="meter-container">
+                        <label>Microphone Level</label>
+                        <div id="mic-meter" class="audio-meter"></div>
+                    </div>
+                    <div class="meter-container">
+                        <label>System Audio Level</label>
+                        <div id="system-meter" class="audio-meter"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <button id="startRecording">Start Recording</button>
         <button id="stopRecording">Stop Recording</button>
@@ -189,6 +433,37 @@
     <div class="floating-preview">
         <span onclick="closePreview()">×</span>
         <video id="previewVideo" autoplay muted></video>
+    </div>
+
+    <div class="secondary-panel">
+        <div class="precision-timer-section">
+            <h3>Precision Timer</h3>
+            <div class="timer-display">00:00:00.000</div>
+            <div class="timer-controls">
+                <button id="timerStart">Start</button>
+                <button id="timerStop">Stop</button>
+                <button id="timerLap">Lap</button>
+                <button id="timerReset">Reset</button>
+            </div>
+            <div class="lap-times"></div>
+        </div>
+
+        <div class="soundboard-section">
+            <h3>Soundboard</h3>
+            <div class="sound-buttons">
+                ${Object.entries(SOUND_EFFECTS).map(([key, sound]) => `
+                    <button class="sound-button" data-sound="${key}">
+                        ${sound.label}
+                    </button>
+                `).join('')}
+            </div>
+            <div class="bluetooth-controls">
+                <button id="bluetoothConnect">
+                    Connect Bluetooth Audio
+                </button>
+                <div class="bluetooth-status">Not Connected</div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -227,6 +502,103 @@
                 console.warn(`[WARN][${new Date().toISOString()}] ${message}`);
             }
         };
+
+        // Add these constants for the audio system
+        const SOUND_EFFECTS = {
+            beep: { url: 'data:audio/wav;base64,...', label: 'Beep' },  // Add base64 encoded sounds
+            click: { url: 'data:audio/wav;base64,...', label: 'Click' },
+            ding: { url: 'data:audio/wav;base64,...', label: 'Ding' }
+        };
+
+        // Add precision timer class
+        class PrecisionTimer {
+            constructor() {
+                this.startTime = 0;
+                this.offset = 0;
+                this.isRunning = false;
+                this.intervals = [];
+                this.laps = [];
+            }
+
+            start() {
+                if (!this.isRunning) {
+                    this.startTime = performance.now() - this.offset;
+                    this.isRunning = true;
+                }
+            }
+
+            stop() {
+                if (this.isRunning) {
+                    this.offset = performance.now() - this.startTime;
+                    this.isRunning = false;
+                }
+            }
+
+            reset() {
+                this.offset = 0;
+                this.laps = [];
+                this.intervals = [];
+            }
+
+            lap() {
+                const lapTime = this.getTime();
+                this.laps.push(lapTime);
+                return lapTime;
+            }
+
+            getTime() {
+                return this.isRunning ? 
+                    performance.now() - this.startTime : 
+                    this.offset;
+            }
+
+            getFormattedTime(precision = 3) {
+                const time = this.getTime();
+                const ms = time % 1000;
+                const s = Math.floor((time / 1000) % 60);
+                const m = Math.floor((time / (1000 * 60)) % 60);
+                const h = Math.floor(time / (1000 * 60 * 60));
+
+                return `${h.toString().padStart(2, '0')}:${
+                    m.toString().padStart(2, '0')}:${
+                    s.toString().padStart(2, '0')}.${
+                    ms.toFixed(precision).slice(2)}`;
+            }
+        }
+
+        // Add Bluetooth audio manager
+        class BluetoothAudioManager {
+            constructor() {
+                this.device = null;
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            async connect() {
+                try {
+                    const device = await navigator.bluetooth.requestDevice({
+                        filters: [{ services: ['audio_source'] }]
+                    });
+                    
+                    await device.gatt.connect();
+                    this.device = device;
+                    
+                    return true;
+                } catch (error) {
+                    logger.error('Bluetooth connection error', error);
+                    return false;
+                }
+            }
+
+            disconnect() {
+                if (this.device && this.device.gatt.connected) {
+                    this.device.gatt.disconnect();
+                }
+            }
+
+            isConnected() {
+                return this.device && this.device.gatt.connected;
+            }
+        }
 
         // Check available disk space
         async function checkDiskSpace() {
@@ -463,8 +835,24 @@
             previewModal.innerHTML = `
                 <div class="preview-content">
                     <video controls src="${URL.createObjectURL(blob)}"></video>
+                    <div class="export-options">
+                        <h3>Export Options</h3>
+                        <select id="exportFormat">
+                            <option value="webm">WebM (Best Quality)</option>
+                            <option value="mp4">MP4 (Most Compatible)</option>
+                            <option value="gif">GIF (Small Size)</option>
+                        </select>
+                        <select id="exportQuality">
+                            <option value="0.8">High Quality</option>
+                            <option value="0.6">Medium Quality</option>
+                            <option value="0.4">Low Quality (Smaller Size)</option>
+                        </select>
+                    </div>
                     <div class="preview-controls">
-                        <button onclick="saveRecording()">Save</button>
+                        <button onclick="saveRecording(
+                            document.getElementById('exportFormat').value,
+                            parseFloat(document.getElementById('exportQuality').value)
+                        )">Save</button>
                         <button onclick="discardRecording()">Discard</button>
                     </div>
                 </div>
@@ -720,6 +1108,151 @@
             }
         `;
         document.head.appendChild(style);
+
+        // Add initialization code
+        function initializeSecondaryPanel() {
+            // Create and add panel
+            const panel = createSecondaryPanel();
+            document.body.appendChild(panel);
+
+            // Initialize precision timer
+            const precisionTimer = new PrecisionTimer();
+            const timerDisplay = panel.querySelector('.timer-display');
+            
+            // Update timer display
+            function updateTimer() {
+                if (precisionTimer.isRunning) {
+                    timerDisplay.textContent = precisionTimer.getFormattedTime();
+                    requestAnimationFrame(updateTimer);
+                }
+            }
+
+            // Timer control events
+            panel.querySelector('#timerStart').addEventListener('click', () => {
+                precisionTimer.start();
+                updateTimer();
+            });
+
+            panel.querySelector('#timerStop').addEventListener('click', () => {
+                precisionTimer.stop();
+            });
+
+            panel.querySelector('#timerLap').addEventListener('click', () => {
+                const lapTime = precisionTimer.lap();
+                const lapElement = document.createElement('div');
+                lapElement.textContent = `Lap ${precisionTimer.laps.length}: ${
+                    new Date(lapTime).toISOString().slice(11, -1)
+                }`;
+                panel.querySelector('.lap-times').appendChild(lapElement);
+            });
+
+            panel.querySelector('#timerReset').addEventListener('click', () => {
+                precisionTimer.reset();
+                timerDisplay.textContent = '00:00:00.000';
+                panel.querySelector('.lap-times').innerHTML = '';
+            });
+
+            // Initialize Bluetooth manager
+            const bluetoothManager = new BluetoothAudioManager();
+            const bluetoothButton = panel.querySelector('#bluetoothConnect');
+            const bluetoothStatus = panel.querySelector('.bluetooth-status');
+
+            bluetoothButton.addEventListener('click', async () => {
+                if (!bluetoothManager.isConnected()) {
+                    bluetoothStatus.textContent = 'Connecting...';
+                    const connected = await bluetoothManager.connect();
+                    bluetoothStatus.textContent = connected ? 
+                        'Connected' : 'Connection failed';
+                    bluetoothButton.textContent = connected ?
+                        'Disconnect' : 'Connect Bluetooth Audio';
+                } else {
+                    bluetoothManager.disconnect();
+                    bluetoothStatus.textContent = 'Not Connected';
+                    bluetoothButton.textContent = 'Connect Bluetooth Audio';
+                }
+            });
+
+            // Initialize soundboard
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const soundBuffers = {};
+
+            // Load sound effects
+            Object.entries(SOUND_EFFECTS).forEach(async ([key, sound]) => {
+                try {
+                    const response = await fetch(sound.url);
+                    const arrayBuffer = await response.arrayBuffer();
+                    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                    soundBuffers[key] = audioBuffer;
+                } catch (error) {
+                    logger.error(`Error loading sound: ${key}`, error);
+                }
+            });
+
+            // Sound button events
+            panel.querySelectorAll('.sound-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const soundKey = button.dataset.sound;
+                    if (soundBuffers[soundKey]) {
+                        const source = audioContext.createBufferSource();
+                        source.buffer = soundBuffers[soundKey];
+                        source.connect(audioContext.destination);
+                        source.start();
+                    }
+                });
+            });
+
+            // Show panel when recording starts
+            document.getElementById('startRecording').addEventListener('click', () => {
+                panel.style.display = 'block';
+            });
+
+            // Hide panel when recording stops
+            document.getElementById('stopRecording').addEventListener('click', () => {
+                panel.style.display = 'none';
+                precisionTimer.stop();
+                precisionTimer.reset();
+            });
+        }
+
+        // Create the secondary control panel HTML
+        function createSecondaryPanel() {
+            const panel = document.createElement('div');
+            panel.className = 'secondary-panel';
+            panel.innerHTML = `
+                <div class="precision-timer-section">
+                    <h3>Precision Timer</h3>
+                    <div class="timer-display">00:00:00.000</div>
+                    <div class="timer-controls">
+                        <button id="timerStart">Start</button>
+                        <button id="timerStop">Stop</button>
+                        <button id="timerLap">Lap</button>
+                        <button id="timerReset">Reset</button>
+                    </div>
+                    <div class="lap-times"></div>
+                </div>
+
+                <div class="soundboard-section">
+                    <h3>Soundboard</h3>
+                    <div class="sound-buttons">
+                        ${Object.entries(SOUND_EFFECTS).map(([key, sound]) => `
+                            <button class="sound-button" data-sound="${key}">
+                                ${sound.label}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div class="bluetooth-controls">
+                        <button id="bluetoothConnect">
+                            Connect Bluetooth Audio
+                        </button>
+                        <div class="bluetooth-status">Not Connected</div>
+                    </div>
+                </div>
+            `;
+            return panel;
+        }
+
+        // Initialize the secondary panel when the document is ready
+        document.addEventListener('DOMContentLoaded', initializeSecondaryPanel);
     </script>
 </body>
 </html>
