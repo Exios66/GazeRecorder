@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Screen Recorder</title>
+    <script src="https://api.apowersoft.com/screen-recorder?lang=en" defer></script>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            background: #121212;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .screen-recorder-container {
+            background: #1e1e1e;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background: #2a2a2a;
+            color: white;
+        }
+
+        /* Buttons */
+        .record-btn {
+            padding: 12px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 100%;
+            transition: all 0.3s ease-in-out;
+        }
+
+        #startRecording {
+            background: #4CAF50;
+            color: white;
+        }
+
+        #startRecording:hover {
+            background: #45a049;
+        }
+
+        #stopRecording {
+            background: #f44336;
+            color: white;
+            display: none;
+        }
+
+        #stopRecording:hover {
+            background: #d32f2f;
+        }
+
+        /* Status */
+        .status {
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 14px;
+            color: #fbc02d;
+            animation: fadeIn 0.5s;
+        }
+
+        /* Video & Download */
+        video {
+            margin-top: 15px;
+            width: 100%;
+            display: none;
+        }
+
+        #downloadLink {
+            display: none;
+            margin-top: 10px;
+            text-decoration: none;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            transition: background 0.3s ease-in-out;
+        }
+
+        #downloadLink:hover {
+            background: #0056b3;
+        }
+
+        /* Loader */
+        .loading {
+            display: none;
+            margin: 10px auto;
+            width: 25px;
+            height: 25px;
+            border: 4px solid white;
+            border-top: 4px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Animations */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="screen-recorder-container">
+        <h2>Apowersoft Screen Recorder</h2>
+
+        <label for="video-quality">Video Quality:</label>
+        <select id="video-quality">
+            <option value="hd">HD</option>
+            <option value="sd">SD</option>
+        </select>
+
+        <label for="audio-input">Audio Source:</label>
+        <select id="audio-input">
+            <option value="microphone">Microphone</option>
+            <option value="system">System Audio</option>
+            <option value="none">No Audio</option>
+        </select>
+
+        <button id="startRecording" class="record-btn">Start Recording</button>
+        <button id="stopRecording" class="record-btn">Stop Recording</button>
+
+        <div class="loading"></div>
+        <div class="status" id="recordingStatus">Ready to Record</div>
+
+        <video id="recordedVideo" controls></video>
+        <a id="downloadLink">Download Recording</a>
+    </div>
+
+    <script>
+        let recorder;
+        let recordedChunks = [];
+        let debugMode = true; // Set to false to disable debugging logs
+
+        function logDebug(message) {
+            if (debugMode) console.log("[DEBUG]:", message);
+        }
+
+        document.getElementById("startRecording").addEventListener("click", async function() {
+            let videoQuality = document.getElementById("video-quality").value;
+            let audioInput = document.getElementById("audio-input").value;
+
+            let constraints = {
+                video: { frameRate: videoQuality === "hd" ? 30 : 15 },
+                audio: audioInput !== "none",
+            };
+
+            try {
+                logDebug("Requesting screen capture...");
+                const stream = await navigator.mediaDevices.getDisplayMedia(constraints);
+                recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+
+                recorder.ondataavailable = event => {
+                    logDebug("Data available from recording...");
+                    recordedChunks.push(event.data);
+                };
+
+                recorder.onstop = () => {
+                    logDebug("Recording stopped. Processing data...");
+                    const blob = new Blob(recordedChunks, { type: "video/webm" });
+                    const url = URL.createObjectURL(blob);
+
+                    document.getElementById("recordedVideo").src = url;
+                    document.getElementById("recordedVideo").style.display = "block";
+
+                    const downloadLink = document.getElementById("downloadLink");
+                    downloadLink.href = url;
+                    downloadLink.download = "screen-recording.webm";
+                    downloadLink.innerText = "Download Recording";
+                    downloadLink.style.display = "block";
+                };
+
+                recorder.start();
+                document.querySelector(".loading").style.display = "block";
+                document.getElementById("recordingStatus").innerText = "Recording...";
+                document.getElementById("startRecording").style.display = "none";
+                document.getElementById("stopRecording").style.display = "inline-block";
+            } catch (error) {
+                logDebug("Error: " + error.message);
+                alert("Error: Unable to start recording. Please check your permissions.");
+            }
+        });
+
+        document.getElementById("stopRecording").addEventListener("click", function() {
+            if (recorder && recorder.state === "recording") {
+                logDebug("Stopping recording...");
+                recorder.stop();
+                document.querySelector(".loading").style.display = "none";
+                document.getElementById("recordingStatus").innerText = "Recording Stopped.";
+                document.getElementById("startRecording").style.display = "inline-block";
+                document.getElementById("stopRecording").style.display = "none";
+            }
+        });
+    </script>
+</body>
+</html>
