@@ -6,37 +6,304 @@
     <title>Advanced Screen Recorder</title>
     <script src="https://api.apowersoft.com/screen-recorder?lang=en" defer></script>
     <style>
-        /* General Styles */
+        /* Color System and Theme Variables */
         :root {
-            --bg-color: #121212;
-            --text-color: white;
-            --card-bg: #1e1e1e;
-            --button-bg: #4CAF50;
-            --button-hover: #45a049;
-            --record-button: #f44336;
-            --record-button-hover: #d32f2f;
-            --toggle-bg: #007bff;
-            --toggle-hover: #0056b3;
+            /* Base Colors - Dark Theme */
+            --arctic-blue: hsl(199, 64%, 73%);
+            --deep-arctic: hsl(200, 65%, 12%);
+            --glacier-white: hsl(200, 20%, 98%);
+            --ice-blue: hsl(187, 100%, 89%);
+            --aurora-teal: hsl(174, 62%, 47%);
+            --neon-blue: hsl(196, 100%, 50%);
+            --navy-dark: hsl(215, 50%, 23%);
+            --aquamarine: hsl(160, 84%, 39%);
+            
+            /* Primary Colors */
+            --primary-h: 174;
+            --primary-s: 62%;
+            --primary-l: 47%;
+            --primary: var(--aurora-teal);
+            --primary-light: hsl(var(--primary-h), var(--primary-s), 57%);
+            --primary-dark: hsl(var(--primary-h), var(--primary-s), 37%);
+
+            /* Accent Colors */
+            --accent-h: 196;
+            --accent-s: 100%;
+            --accent-l: 50%;
+            --accent: var(--neon-blue);
+            --accent-light: hsl(var(--accent-h), var(--accent-s), 60%);
+            --accent-dark: hsl(var(--accent-h), var(--accent-s), 40%);
+
+            /* Status Colors */
+            --danger: hsl(0, 85%, 60%);
+            --danger-light: hsl(0, 85%, 70%);
+            --danger-dark: hsl(0, 85%, 50%);
+            --warning: hsl(45, 100%, 51%);
+            --success: var(--aquamarine);
+
+            /* Neutral Colors - Dark Theme */
+            --bg-primary: var(--deep-arctic);
+            --bg-secondary: hsl(200, 65%, 15%);
+            --bg-tertiary: hsl(200, 65%, 18%);
+            
+            --surface-primary: hsl(200, 65%, 16%);
+            --surface-secondary: hsl(200, 65%, 20%);
+            --surface-tertiary: hsl(200, 65%, 24%);
+
+            --text-primary: var(--glacier-white);
+            --text-secondary: hsl(200, 20%, 80%);
+            --text-tertiary: hsl(200, 20%, 65%);
+            
+            /* Semantic Colors */
+            --border-color: hsl(200, 65%, 25%);
+            --shadow-color: hsla(200, 65%, 5%, 0.2);
+            --overlay-color: hsla(200, 65%, 5%, 0.8);
+
+            /* Component-specific colors */
+            --button-bg: var(--aurora-teal);
+            --button-hover: var(--primary-light);
+            --button-active: var(--primary-dark);
+            
+            --record-button: var(--danger);
+            --record-button-hover: var(--danger-light);
+            --record-button-active: var(--danger-dark);
+
+            /* UI Elements */
+            --meter-bg: var(--surface-secondary);
+            --meter-fill: var(--neon-blue);
+            --meter-fill-warning: var(--warning);
+            --meter-fill-danger: var(--danger);
+
+            /* Glass Effect */
+            --glass-bg: hsla(200, 65%, 20%, 0.8);
+            --glass-border: hsla(200, 65%, 40%, 0.3);
+            --glass-shadow: 0 8px 32px 0 hsla(200, 65%, 5%, 0.37);
+
+            /* Transitions */
+            --transition-speed: 0.3s;
+            --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* Light Theme Colors */
         [data-theme="light"] {
-            --bg-color: #f4f4f4;
-            --text-color: #121212;
-            --card-bg: white;
-            --button-bg: #008cba;
-            --button-hover: #0078a0;
-            --record-button: #ff4c4c;
-            --record-button-hover: #d32f2f;
-            --toggle-bg: #ffcc00;
-            --toggle-hover: #e6b800;
+            /* Neutral Colors - Light Theme */
+            --bg-primary: var(--glacier-white);
+            --bg-secondary: hsl(200, 20%, 95%);
+            --bg-tertiary: hsl(200, 20%, 90%);
+            
+            --surface-primary: hsl(200, 20%, 100%);
+            --surface-secondary: hsl(200, 20%, 97%);
+            --surface-tertiary: hsl(200, 20%, 93%);
+
+            --text-primary: var(--deep-arctic);
+            --text-secondary: hsl(200, 65%, 30%);
+            --text-tertiary: hsl(200, 65%, 45%);
+
+            /* Adjusted Semantic Colors */
+            --border-color: hsl(200, 20%, 85%);
+            --shadow-color: hsla(200, 65%, 5%, 0.1);
+            --overlay-color: hsla(200, 65%, 5%, 0.6);
+
+            /* Glass Effect - Light */
+            --glass-bg: hsla(200, 20%, 100%, 0.8);
+            --glass-border: hsla(200, 20%, 40%, 0.3);
+            --glass-shadow: 0 8px 32px 0 hsla(200, 20%, 5%, 0.37);
         }
 
+        /* Base Styles */
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color var(--transition-speed) var(--transition-timing),
+                      color var(--transition-speed) var(--transition-timing);
+        }
+
+        /* Component Styles */
+        .screen-recorder-container {
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            transition: all var(--transition-speed) var(--transition-timing);
+        }
+
+        button {
+            background: var(--button-bg);
+            color: var(--glacier-white);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 14px;
+            transition: all var(--transition-speed) var(--transition-timing);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 6px hsla(200, 65%, 5%, 0.1);
+        }
+
+        button:hover {
+            background: var(--button-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px hsla(200, 65%, 5%, 0.2);
+        }
+
+        button:active {
+            background: var(--button-active);
+            transform: translateY(0);
+            box-shadow: 0 2px 4px hsla(200, 65%, 5%, 0.1);
+        }
+
+        #startRecording {
+            background: var(--success);
+        }
+
+        #stopRecording {
+            background: var(--danger);
+        }
+
+        .quality-select {
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all var(--transition-speed) var(--transition-timing);
+        }
+
+        .quality-select:hover {
+            border-color: var(--aurora-teal);
+        }
+
+        .quality-select:focus {
+            border-color: var(--neon-blue);
+            outline: none;
+            box-shadow: 0 0 0 2px hsla(196, 100%, 50%, 0.2);
+        }
+
+        .audio-meter {
+            background: var(--meter-bg);
+            border: 1px solid var(--glass-border);
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .audio-meter .meter-fill {
+            background: linear-gradient(90deg, var(--aurora-teal), var(--neon-blue));
+            height: 100%;
+            transition: width 0.1s ease;
+        }
+
+        .floating-preview {
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+        }
+
+        .secondary-panel {
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+        }
+
+        .panel-section {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .panel-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .panel-section h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .timer-display {
+            background: var(--deep-arctic);
+            color: var(--neon-blue);
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 24px;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 16px;
+            text-shadow: 0 0 10px hsla(196, 100%, 50%, 0.5);
+        }
+
+        .timer-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .timer-controls button {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: var(--accent);
+        }
+
+        .sound-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .sound-button {
+            padding: 8px;
+            font-size: 12px;
+            background: var(--accent);
+            color: var(--surface-primary);
+        }
+
+        .sound-button:hover {
+            background: var(--accent-light);
+        }
+
+        .sound-button:active {
+            background: var(--accent-dark);
+        }
+
+        .bluetooth-status {
+            color: var(--text-secondary);
+        }
+
+        .bluetooth-status[data-status="connected"] {
+            color: var(--success);
+        }
+
+        .bluetooth-status[data-status="disconnected"] {
+            color: var(--danger);
+        }
+
+        .error-message {
+            background: var(--glass-bg);
+            border-left: 4px solid var(--danger);
+            box-shadow: var(--glass-shadow);
+        }
+
+        /* General Styles */
         body {
             font-family: 'Arial', sans-serif;
             text-align: center;
             margin: 0;
-            background: var(--bg-color);
-            color: var(--text-color);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -45,10 +312,8 @@
         }
 
         .screen-recorder-container {
-            background: var(--card-bg);
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
             width: 90%;
             max-width: 500px;
             text-align: center;
@@ -72,19 +337,8 @@
             transition: all 0.3s;
         }
 
-        #startRecording {
-            background: var(--button-bg);
-            color: white;
-        }
-
         #startRecording:hover {
             background: var(--button-hover);
-        }
-
-        #stopRecording {
-            background: var(--record-button);
-            color: white;
-            display: none;
         }
 
         #stopRecording:hover {
@@ -92,12 +346,12 @@
         }
 
         #toggleTheme {
-            background: var(--toggle-bg);
-            color: white;
+            background: var(--primary);
+            color: var(--surface-primary);
         }
 
         #toggleTheme:hover {
-            background: var(--toggle-hover);
+            background: var(--primary-light);
         }
 
         .status {
@@ -116,15 +370,15 @@
             display: none;
             text-decoration: none;
             padding: 10px;
-            background: var(--toggle-bg);
-            color: white;
+            background: var(--primary);
+            color: var(--surface-primary);
             border-radius: 5px;
             margin-top: 10px;
             transition: background 0.3s;
         }
 
         #downloadLink:hover {
-            background: var(--toggle-hover);
+            background: var(--primary-light);
         }
 
         /* Floating Preview */
@@ -155,6 +409,240 @@
             border-radius: 50%;
             font-weight: bold;
         }
+
+        .processing-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .processing-content {
+            background: var(--surface-primary);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress {
+            width: 0%;
+            height: 100%;
+            background: var(--button-bg);
+            transition: width 0.3s;
+        }
+
+        .export-options {
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        .export-options select {
+            width: 100%;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .quality-settings {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 8px;
+        }
+
+        .quality-section {
+            margin-bottom: 15px;
+        }
+
+        .quality-section h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .quality-select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--button-bg);
+        }
+
+        .custom-quality-options {
+            padding: 10px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .custom-quality-options label {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .custom-quality-options input,
+        .custom-quality-options select {
+            width: 100%;
+            padding: 6px;
+            margin-top: 4px;
+            border-radius: 4px;
+            border: 1px solid var(--button-bg);
+        }
+
+        .audio-meters {
+            margin-top: 10px;
+        }
+
+        .meter-container {
+            margin-bottom: 8px;
+        }
+
+        .audio-meter {
+            height: 10px;
+            background: #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .audio-meter::before {
+            content: '';
+            display: block;
+            height: 100%;
+            width: 0%;
+            background: var(--button-bg);
+            transition: width 0.1s ease;
+        }
+
+        #estimated-size {
+            font-size: 12px;
+            color: var(--text-color);
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        /* Secondary Panel Styles */
+        .secondary-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--surface-primary);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            width: 250px;
+            z-index: 1000;
+            transform: translateX(110%);
+            transition: transform var(--transition-speed) var(--transition-timing);
+        }
+
+        .secondary-panel.visible {
+            transform: translateX(0);
+        }
+
+        .panel-section {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .panel-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .panel-section h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .timer-display {
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 20px;
+            padding: 8px;
+            background: var(--surface-secondary);
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .timer-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .timer-controls button {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: var(--accent);
+        }
+
+        .sound-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .sound-button {
+            padding: 8px;
+            font-size: 12px;
+            background: var(--accent);
+            color: var(--surface-primary);
+        }
+
+        .toggle-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--accent);
+            color: var(--surface-primary);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            z-index: 999;
+            border: none;
+            width: auto;
+            font-size: 14px;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--surface-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--aurora-teal);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-blue);
+        }
     </style>
 </head>
 <body>
@@ -163,18 +651,55 @@
 
         <button id="toggleTheme">Toggle Dark/Light Mode</button>
 
-        <label for="video-quality">Video Quality:</label>
-        <select id="video-quality">
-            <option value="hd">HD</option>
-            <option value="sd">SD</option>
-        </select>
+        <div class="quality-settings">
+            <div class="quality-section">
+                <h3>Video Settings</h3>
+                <select id="video-quality" class="quality-select" title="Video Quality">
+                    <option value="hd">HD</option>
+                    <option value="sd">SD</option>
+                </select>
+                <div class="custom-quality-options" style="display: none;">
+                    <label>Frame Rate:
+                        <input type="number" id="custom-framerate" min="1" max="60" value="30">
+                    </label>
+                    <label>Resolution:
+                        <select id="custom-resolution">
+                            <option value="3840x2160">4K (3840x2160)</option>
+                            <option value="1920x1080">1080p (1920x1080)</option>
+                            <option value="1280x720">720p (1280x720)</option>
+                            <option value="854x480">480p (854x480)</option>
+                            <option value="640x360">360p (640x360)</option>
+                        </select>
+                    </label>
+                    <label>Bitrate (Mbps):
+                        <input type="number" id="custom-bitrate" min="0.1" max="20" step="0.1" value="2.5">
+                    </label>
+                </div>
+            </div>
 
-        <label for="audio-input">Audio Source:</label>
-        <select id="audio-input">
-            <option value="microphone">Microphone</option>
-            <option value="system">System Audio</option>
-            <option value="none">No Audio</option>
-        </select>
+            <div class="quality-section">
+                <h3>Audio Settings</h3>
+                <select id="audio-source" class="quality-select" title="Audio Source">
+                    <option value="both">Microphone + System Audio</option>
+                    <option value="microphone">Microphone Only</option>
+                    <option value="system">System Audio Only</option>
+                    <option value="none">No Audio</option>
+                </select>
+                
+                <div class="audio-controls">
+                    <div class="volume-control">
+                        <label for="mic-volume">Microphone Volume</label>
+                        <input type="range" id="mic-volume" min="0" max="100" value="100" title="Microphone Volume Control">
+                        <div id="mic-meter" class="audio-meter"></div>
+                    </div>
+                    <div class="volume-control">
+                        <label for="system-volume">System Audio Volume</label>
+                        <input type="range" id="system-volume" min="0" max="100" value="100" title="System Audio Volume Control">
+                        <div id="system-meter" class="audio-meter"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <button id="startRecording">Start Recording</button>
         <button id="stopRecording">Stop Recording</button>
@@ -191,67 +716,1415 @@
         <video id="previewVideo" autoplay muted></video>
     </div>
 
+    <div class="toggle-panel" onclick="toggleSecondaryPanel()">
+        Tools
+    </div>
+
+    <div class="secondary-panel">
+        <div class="panel-section">
+            <h3>Timer</h3>
+            <div class="timer-display">00:00:00.000</div>
+            <div class="timer-controls">
+                <button id="timerStart">Start</button>
+                <button id="timerStop">Stop</button>
+                <button id="timerReset">Reset</button>
+                <button id="timerLap">Lap</button>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h3>Soundboard</h3>
+            <div class="sound-grid">
+                <button class="sound-button" data-sound="beep">Beep</button>
+                <button class="sound-button" data-sound="click">Click</button>
+                <button class="sound-button" data-sound="ding">Ding</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let recorder, stream;
         let recordedChunks = [];
         let markers = [];
         let darkMode = true;
+        let recordingStartTime;
+        let recordingDuration;
+        let recordingInterval;
+        
+        // Constants
+        const MAX_RECORDING_DURATION = 3600; // 1 hour in seconds
+        const MIN_DISK_SPACE = 500 * 1024 * 1024; // 500MB in bytes
+        const CHUNK_SIZE = 1000; // 1 second chunks
+        
+        // Analytics data
+        const analytics = {
+            recordingsStarted: 0,
+            recordingsCompleted: 0,
+            totalDuration: 0,
+            errors: [],
+            lastRecordingSize: 0
+        };
 
+        // Enhanced Logger with better error handling and debugging
+        const logger = {
+            logHistory: [],
+            maxLogHistory: 1000,
+            
+            _formatMessage: function(level, message, error = null) {
+                const timestamp = new Date().toISOString();
+                const errorDetails = error ? {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name,
+                    code: error.code
+                } : null;
+                
+                return {
+                    timestamp,
+                    level,
+                    message,
+                    error: errorDetails
+                };
+            },
+            
+            _addToHistory: function(logEntry) {
+                this.logHistory.push(logEntry);
+                if (this.logHistory.length > this.maxLogHistory) {
+                    this.logHistory.shift();
+                }
+            },
+            
+            info: function(message) {
+                const logEntry = this._formatMessage('INFO', message);
+                this._addToHistory(logEntry);
+                console.log(`[INFO][${logEntry.timestamp}] ${message}`);
+            },
+            
+            warn: function(message, error = null) {
+                const logEntry = this._formatMessage('WARN', message, error);
+                this._addToHistory(logEntry);
+                console.warn(`[WARN][${logEntry.timestamp}] ${message}`, error || '');
+            },
+            
+            error: function(message, error = null) {
+                const logEntry = this._formatMessage('ERROR', message, error);
+                this._addToHistory(logEntry);
+                console.error(`[ERROR][${logEntry.timestamp}] ${message}`, error || '');
+                this._updateErrorDisplay(logEntry);
+                
+                // Add to analytics
+                analytics.errors.push(logEntry);
+            },
+            
+            debug: function(message, data = null) {
+                const logEntry = this._formatMessage('DEBUG', message, data);
+                this._addToHistory(logEntry);
+                console.debug(`[DEBUG][${logEntry.timestamp}] ${message}`, data || '');
+            },
+            
+            _updateErrorDisplay: function(logEntry) {
+                const errorContainer = document.getElementById('errorContainer') || this._createErrorContainer();
+                const errorElement = document.createElement('div');
+                errorElement.className = 'error-message';
+                errorElement.innerHTML = `
+                    <div class="error-header">
+                        <span class="error-timestamp">${new Date(logEntry.timestamp).toLocaleTimeString()}</span>
+                        <span class="error-close" onclick="this.parentElement.parentElement.remove()">×</span>
+                    </div>
+                    <div class="error-content">
+                        <div class="error-text">${logEntry.message}</div>
+                        ${logEntry.error ? `<div class="error-details">${logEntry.error.message}</div>` : ''}
+                    </div>
+                `;
+                
+                errorContainer.appendChild(errorElement);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (errorElement.parentNode) {
+                        errorElement.remove();
+                    }
+                }, 5000);
+            },
+            
+            _createErrorContainer: function() {
+                const container = document.createElement('div');
+                container.id = 'errorContainer';
+                container.className = 'error-container';
+                document.body.appendChild(container);
+                return container;
+            },
+            
+            getLogHistory: function() {
+                return this.logHistory;
+            },
+            
+            downloadLogs: function() {
+                const logData = JSON.stringify(this.logHistory, null, 2);
+                const blob = new Blob([logData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `screen-recorder-logs-${new Date().toISOString()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        };
+
+        // Add error handling styles
+        const errorStyles = document.createElement('style');
+        errorStyles.textContent = `
+            .error-container {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 9999;
+                max-width: 400px;
+                max-height: 80vh;
+                overflow-y: auto;
+                pointer-events: none;
+            }
+            
+            .error-message {
+                background: var(--surface-primary);
+                border-left: 4px solid var(--danger);
+                margin-bottom: 10px;
+                padding: 10px;
+                border-radius: 4px;
+                box-shadow: 0 2px 8px var(--shadow-color);
+                pointer-events: auto;
+                animation: slideIn 0.3s ease-out;
+            }
+            
+            .error-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 5px;
+            }
+            
+            .error-timestamp {
+                font-size: 12px;
+                color: var(--text-secondary);
+            }
+            
+            .error-close {
+                cursor: pointer;
+                padding: 0 5px;
+                color: var(--text-secondary);
+            }
+            
+            .error-close:hover {
+                color: var(--danger);
+            }
+            
+            .error-content {
+                font-size: 14px;
+            }
+            
+            .error-text {
+                color: var(--text-primary);
+                margin-bottom: 5px;
+            }
+            
+            .error-details {
+                color: var(--text-secondary);
+                font-size: 12px;
+                font-family: monospace;
+                white-space: pre-wrap;
+                margin-top: 5px;
+            }
+            
+            @keyframes slideIn {
+                from {
+                    transform: translateX(-100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            .debug-panel {
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                background: var(--surface-primary);
+                padding: 10px;
+                border-radius: 4px;
+                box-shadow: 0 2px 8px var(--shadow-color);
+                z-index: 9999;
+                display: none;
+            }
+            
+            .debug-panel.visible {
+                display: block;
+            }
+            
+            .debug-panel button {
+                margin: 5px;
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+        `;
+        document.head.appendChild(errorStyles);
+
+        // Add debug panel
+        const debugPanel = document.createElement('div');
+        debugPanel.className = 'debug-panel';
+        debugPanel.innerHTML = `
+            <button onclick="logger.downloadLogs()">Download Logs</button>
+            <button onclick="console.table(logger.getLogHistory())">Show Logs in Console</button>
+        `;
+        document.body.appendChild(debugPanel);
+
+        // Add keyboard shortcut for debug panel (Ctrl/Cmd + Shift + D)
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
+                debugPanel.classList.toggle('visible');
+            }
+        });
+
+        // Enhanced error handling for async operations
+        window.addEventListener('unhandledrejection', (event) => {
+            logger.error('Unhandled Promise Rejection', event.reason);
+        });
+
+        window.addEventListener('error', (event) => {
+            logger.error('Uncaught Error', event.error);
+        });
+
+        // Initialize soundboard with proper audio handling
+        const SOUND_EFFECTS = {
+            beep: { 
+                label: 'Beep',
+                duration: 0.5,
+                frequency: 440 // A4 note
+            },
+            click: { 
+                label: 'Click',
+                duration: 0.2,
+                frequency: 880 // A5 note
+            },
+            ding: { 
+                label: 'Ding',
+                duration: 0.8,
+                frequency: 523.25 // C5 note
+            }
+        };
+
+        class SoundboardManager {
+            constructor() {
+                this.audioContext = null;
+                this.soundBuffers = {};
+                this.isInitialized = false;
+                this.outputDevice = null;
+            }
+
+            async initialize() {
+                if (this.isInitialized) return;
+
+                try {
+                    // Create audio context with proper options for system audio output
+                    const contextOptions = {
+                        latencyHint: 'interactive',
+                        sampleRate: 48000
+                    };
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)(contextOptions);
+
+                    // Get list of available audio output devices
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+                    
+                    // Log available audio outputs for debugging
+                    logger.info('Available audio outputs:', audioOutputs.map(d => `${d.label} (${d.deviceId})`));
+
+                    // Try to get the default audio output device
+                    if (audioOutputs.length > 0) {
+                        const defaultDevice = audioOutputs.find(d => d.deviceId === 'default') || audioOutputs[0];
+                        await this.setAudioOutput(defaultDevice.deviceId);
+                    }
+
+                    // Create sound buffers
+                    for (const [key, sound] of Object.entries(SOUND_EFFECTS)) {
+                        const buffer = await this.createSoundBuffer(sound);
+                        this.soundBuffers[key] = buffer;
+                    }
+
+                    // Add device change listener
+                    navigator.mediaDevices.addEventListener('devicechange', async () => {
+                        await this.handleDeviceChange();
+                    });
+
+                    this.isInitialized = true;
+                    logger.info('Soundboard initialized successfully');
+                } catch (error) {
+                    logger.error('Error initializing soundboard', error);
+                    throw error;
+                }
+            }
+
+            async handleDeviceChange() {
+                try {
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+                    
+                    // If current output device is not in the list, switch to default
+                    if (this.outputDevice && !audioOutputs.find(d => d.deviceId === this.outputDevice)) {
+                        const defaultDevice = audioOutputs.find(d => d.deviceId === 'default') || audioOutputs[0];
+                        if (defaultDevice) {
+                            await this.setAudioOutput(defaultDevice.deviceId);
+                        }
+                    }
+                } catch (error) {
+                    logger.error('Error handling device change', error);
+                }
+            }
+
+            async setAudioOutput(deviceId) {
+                try {
+                    // For browsers that support setSinkId
+                    if (typeof HTMLAudioElement.prototype.setSinkId === 'function') {
+                        // Create a dummy audio element to set the sink ID
+                        const audio = new Audio();
+                        await audio.setSinkId(deviceId);
+                        this.outputDevice = deviceId;
+                        logger.info(`Audio output set to device: ${deviceId}`);
+                    } else {
+                        // Fallback for browsers that don't support setSinkId
+                        this.outputDevice = 'default';
+                        logger.warn('setSinkId not supported, using default audio output');
+                    }
+                } catch (error) {
+                    logger.error('Error setting audio output', error);
+                    this.outputDevice = 'default';
+                }
+            }
+
+            async createSoundBuffer({ duration, frequency = 440 }) {
+                const sampleRate = this.audioContext.sampleRate;
+                const buffer = this.audioContext.createBuffer(2, duration * sampleRate, sampleRate);
+                
+                // Create stereo sound (2 channels)
+                for (let channel = 0; channel < 2; channel++) {
+                    const channelData = buffer.getChannelData(channel);
+                    for (let i = 0; i < buffer.length; i++) {
+                        // Create a more complex waveform with harmonics
+                        const t = i / sampleRate;
+                        const fundamental = Math.sin(2 * Math.PI * frequency * t);
+                        const harmonic1 = Math.sin(2 * Math.PI * (frequency * 2) * t) * 0.5;
+                        const harmonic2 = Math.sin(2 * Math.PI * (frequency * 3) * t) * 0.25;
+                        
+                        channelData[i] = (fundamental + harmonic1 + harmonic2) *
+                            Math.exp(-5 * i / buffer.length); // Add decay
+                    }
+                }
+                
+                return buffer;
+            }
+
+            async playSound(soundKey) {
+                if (!this.isInitialized || !this.soundBuffers[soundKey]) {
+                    logger.warn(`Sound ${soundKey} not initialized`);
+                    return;
+                }
+
+                try {
+                    // Resume audio context if it's suspended
+                    if (this.audioContext.state === 'suspended') {
+                        await this.audioContext.resume();
+                    }
+
+                    const source = this.audioContext.createBufferSource();
+                    const gainNode = this.audioContext.createGain();
+                    const stereoPanner = this.audioContext.createStereoPanner();
+                    
+                    source.buffer = this.soundBuffers[soundKey];
+                    
+                    // Create audio processing chain
+                    source
+                        .connect(gainNode)
+                        .connect(stereoPanner)
+                        .connect(this.audioContext.destination);
+
+                    // Add slight stereo effect
+                    stereoPanner.pan.value = Math.random() * 0.4 - 0.2; // Random pan between -0.2 and 0.2
+                    
+                    // Start the sound
+                    source.start();
+                    logger.info(`Playing sound: ${soundKey}`);
+                } catch (error) {
+                    logger.error(`Error playing sound: ${soundKey}`, error);
+                }
+            }
+        }
+
+        class BluetoothAudioManager {
+            constructor() {
+                this.device = null;
+                this.gattServer = null;
+                this.audioService = null;
+                this.isConnecting = false;
+            }
+
+            async connect() {
+                if (this.isConnecting) return false;
+                this.isConnecting = true;
+
+                try {
+                    if (!navigator.bluetooth) {
+                        throw new Error('Bluetooth API not available');
+                    }
+
+                    // Request device with audio capabilities
+                    this.device = await navigator.bluetooth.requestDevice({
+                        filters: [
+                            { services: ['0000110b-0000-1000-8000-00805f9b34fb'] } // A2DP Sink service
+                        ],
+                        optionalServices: ['battery_service']
+                    });
+
+                    // Connect to GATT server
+                    this.gattServer = await this.device.gatt.connect();
+                    
+                    // Try to get battery service if available
+                    try {
+                        const batteryService = await this.gattServer.getPrimaryService('battery_service');
+                        const batteryLevel = await batteryService.getCharacteristic('battery_level');
+                        const value = await batteryLevel.readValue();
+                        logger.info(`Connected device battery level: ${value.getUint8(0)}%`);
+                    } catch (e) {
+                        logger.warn('Battery service not available', e);
+                    }
+
+                    this.device.addEventListener('gattserverdisconnected', this.handleDisconnection.bind(this));
+                    
+                    this.isConnecting = false;
+                    return true;
+                } catch (error) {
+                    logger.error('Bluetooth connection error', error);
+                    this.isConnecting = false;
+                    return false;
+                }
+            }
+
+            handleDisconnection() {
+                logger.warn('Bluetooth device disconnected');
+                this.gattServer = null;
+                this.audioService = null;
+                
+                // Update UI
+                const statusElement = document.querySelector('.bluetooth-status');
+                if (statusElement) {
+                    statusElement.textContent = 'Disconnected';
+                    statusElement.style.color = 'var(--record-button)';
+                }
+            }
+
+            disconnect() {
+                if (this.gattServer && this.gattServer.connected) {
+                    this.gattServer.disconnect();
+                }
+                this.device = null;
+                this.gattServer = null;
+                this.audioService = null;
+            }
+
+            isConnected() {
+                return this.gattServer && this.gattServer.connected;
+            }
+        }
+
+        // Initialize managers
+        const soundboardManager = new SoundboardManager();
+        const bluetoothManager = new BluetoothAudioManager();
+
+        // Add precision timer class
+        class PrecisionTimer {
+            constructor() {
+                this.startTime = 0;
+                this.offset = 0;
+                this.isRunning = false;
+                this.intervals = [];
+                this.laps = [];
+            }
+
+            start() {
+                if (!this.isRunning) {
+                    this.startTime = performance.now() - this.offset;
+                    this.isRunning = true;
+                }
+            }
+
+            stop() {
+                if (this.isRunning) {
+                    this.offset = performance.now() - this.startTime;
+                    this.isRunning = false;
+                }
+            }
+
+            reset() {
+                this.offset = 0;
+                this.laps = [];
+                this.intervals = [];
+            }
+
+            lap() {
+                const lapTime = this.getTime();
+                this.laps.push(lapTime);
+                return lapTime;
+            }
+
+            getTime() {
+                return this.isRunning ? 
+                    performance.now() - this.startTime : 
+                    this.offset;
+            }
+
+            getFormattedTime(precision = 3) {
+                const time = this.getTime();
+                const ms = time % 1000;
+                const s = Math.floor((time / 1000) % 60);
+                const m = Math.floor((time / (1000 * 60)) % 60);
+                const h = Math.floor(time / (1000 * 60 * 60));
+
+                return `${h.toString().padStart(2, '0')}:${
+                    m.toString().padStart(2, '0')}:${
+                    s.toString().padStart(2, '0')}.${
+                    ms.toFixed(precision).slice(2)}`;
+            }
+        }
+
+        // Check available disk space
+        async function checkDiskSpace() {
+            try {
+                if ('storage' in navigator && 'estimate' in navigator.storage) {
+                    const { quota, usage } = await navigator.storage.estimate();
+                    const available = quota - usage;
+                    if (available < MIN_DISK_SPACE) {
+                        throw new Error(`Insufficient disk space. Need at least ${MIN_DISK_SPACE / (1024 * 1024)}MB`);
+                    }
+                    return true;
+                }
+                logger.warn('Storage estimation API not available');
+                return true;
+            } catch (error) {
+                logger.error('Error checking disk space', error);
+                throw error;
+            }
+        }
+
+        // Check and request permissions
+        async function checkAndRequestPermissions() {
+            try {
+                const permissions = {
+                    microphone: false,
+                    camera: false,
+                    displayMedia: false
+                };
+
+                // Check microphone permission
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        stream.getTracks().forEach(track => track.stop());
+                        permissions.microphone = true;
+                    } catch (e) {
+                        logger.warn('Microphone permission denied', e);
+                    }
+                }
+
+                // Check camera permission (for potential future use)
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                        stream.getTracks().forEach(track => track.stop());
+                        permissions.camera = true;
+                    } catch (e) {
+                        logger.warn('Camera permission denied', e);
+                    }
+                }
+
+                // Check display capture permission
+                if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+                    permissions.displayMedia = true;
+                }
+
+                return permissions;
+            } catch (error) {
+                logger.error('Error checking permissions', error);
+                throw error;
+            }
+        }
+
+        // Compression worker for large recordings
+        const compressionWorker = new Worker(URL.createObjectURL(new Blob([`
+            self.onmessage = async function(e) {
+                try {
+                    const { chunks, quality } = e.data;
+                    const blob = new Blob(chunks, { type: 'video/webm' });
+                    
+                    // Create compressed version
+                    const compressedBlob = await new Promise((resolve) => {
+                        const canvas = new OffscreenCanvas(1280, 720);
+                        const ctx = canvas.getContext('2d');
+                        const video = new Video();
+                        
+                        video.src = URL.createObjectURL(blob);
+                        video.onloadedmetadata = () => {
+                            const stream = canvas.captureStream(30);
+                            const recorder = new MediaRecorder(stream, {
+                                videoBitsPerSecond: quality === 'hd' ? 1500000 : 800000
+                            });
+                            
+                            const compressedChunks = [];
+                            recorder.ondataavailable = e => compressedChunks.push(e.data);
+                            recorder.onstop = () => resolve(new Blob(compressedChunks, { type: 'video/webm' }));
+                            
+                            video.play();
+                            recorder.start();
+                            
+                            video.onended = () => recorder.stop();
+                        };
+                    });
+                    
+                    self.postMessage({ success: true, blob: compressedBlob });
+                } catch (error) {
+                    self.postMessage({ success: false, error: error.message });
+                }
+            };
+        `], { type: 'text/javascript' })));
+
+        // Session management
+        const session = {
+            id: crypto.randomUUID(),
+            startTime: new Date(),
+            recordings: [],
+            
+            addRecording(duration, size, markers) {
+                this.recordings.push({
+                    id: crypto.randomUUID(),
+                    timestamp: new Date(),
+                    duration,
+                    size,
+                    markers
+                });
+                
+                // Save session data
+                localStorage.setItem('recordingSession', JSON.stringify({
+                    id: this.id,
+                    startTime: this.startTime,
+                    recordings: this.recordings
+                }));
+            }
+        };
+
+        // Enhanced cleanup function
+        async function cleanup() {
+            try {
+                logger.debug('Starting cleanup');
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                if (recorder) {
+                    if (recorder.state !== 'inactive') {
+                        recorder.stop();
+                    }
+                }
+                
+                // Clear data
+                recordedChunks = [];
+                markers = [];
+                if (recordingInterval) {
+                    clearInterval(recordingInterval);
+                }
+                
+                // Reset UI
+                document.getElementById("recordingStatus").innerText = "Ready to Record";
+                document.getElementById("startRecording").style.display = "inline-block";
+                document.getElementById("stopRecording").style.display = "none";
+                document.getElementById("markTime").disabled = true;
+                document.querySelector(".floating-preview").style.display = "none";
+                
+                // Clear preview
+                const previewVideo = document.getElementById("previewVideo");
+                if (previewVideo.srcObject) {
+                    previewVideo.srcObject = null;
+                }
+                
+                logger.info('Cleanup completed successfully');
+            } catch (error) {
+                logger.error('Cleanup failed', error);
+                // Continue with partial cleanup
+                try {
+                    // Minimal cleanup for critical resources
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+                    if (recorder && recorder.state !== 'inactive') {
+                        recorder.stop();
+                    }
+                } catch (criticalError) {
+                    logger.error('Critical cleanup failed', criticalError);
+                }
+            }
+        }
+
+        // Initialize the application
+        async function initializeApp() {
+            try {
+                // Check HTTPS
+                if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+                    throw new Error('HTTPS is required for screen recording');
+                }
+                
+                // Check browser compatibility
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+                    throw new Error('Screen recording is not supported in this browser');
+                }
+                
+                // Check permissions
+                const permissions = await checkAndRequestPermissions();
+                logger.info('Permissions status:', permissions);
+                
+                // Check disk space
+                await checkDiskSpace();
+                
+                // Load previous session if exists
+                const savedSession = localStorage.getItem('recordingSession');
+                if (savedSession) {
+                    const sessionData = JSON.parse(savedSession);
+                    session.recordings = sessionData.recordings || [];
+                }
+                
+                // Initialize UI state
+                document.body.setAttribute("data-theme", darkMode ? "dark" : "light");
+                
+                logger.info('Application initialized successfully');
+                return true;
+            } catch (error) {
+                logger.error('Error initializing application', error);
+                document.getElementById("recordingStatus").innerText = `Error: ${error.message}`;
+                return false;
+            }
+        }
+
+        // Format recording for download
+        async function prepareRecordingForDownload(chunks, quality) {
+            try {
+                // Create initial blob
+                const blob = new Blob(chunks, { type: 'video/webm' });
+                
+                // Show export dialog
+                const exportDialog = document.createElement('div');
+                exportDialog.className = 'export-dialog';
+                exportDialog.innerHTML = `
+                    <div class="export-content">
+                        <h3>Export Recording</h3>
+                        <div class="export-options">
+                            <div class="option-group">
+                                <label for="exportFormat">Format</label>
+                                <select id="exportFormat">
+                                    <option value="webm">WebM (Best Quality)</option>
+                                    <option value="mp4">MP4 (Most Compatible)</option>
+                                </select>
+                            </div>
+                            <div class="option-group">
+                                <label for="exportQuality">Quality</label>
+                                <select id="exportQuality">
+                                    <option value="high">High (Original)</option>
+                                    <option value="medium">Medium (Compressed)</option>
+                                    <option value="low">Low (Smaller File)</option>
+                                </select>
+                            </div>
+                            <div class="option-group">
+                                <label for="exportFilename">Filename</label>
+                                <input type="text" id="exportFilename" 
+                                    value="recording-${new Date().toISOString().slice(0,19).replace(/[:-]/g, '')}"
+                                    pattern="[a-zA-Z0-9-_]+"
+                                    title="Only letters, numbers, hyphens and underscores are allowed">
+                            </div>
+                        </div>
+                        <div class="export-info">
+                            <span>Original Size: ${(blob.size / (1024 * 1024)).toFixed(1)} MB</span>
+                            <span id="estimatedSize"></span>
+                        </div>
+                        <div class="export-actions">
+                            <button id="startExport">Export</button>
+                            <button id="cancelExport">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(exportDialog);
+
+                return new Promise((resolve, reject) => {
+                    const startExport = document.getElementById('startExport');
+                    const cancelExport = document.getElementById('cancelExport');
+                    const formatSelect = document.getElementById('exportFormat');
+                    const qualitySelect = document.getElementById('exportQuality');
+                    const filenameInput = document.getElementById('exportFilename');
+                    
+                    // Update estimated size
+                    function updateEstimatedSize() {
+                        const quality = qualitySelect.value;
+                        const format = formatSelect.value;
+                        let estimatedSize = blob.size;
+                        
+                        if (quality === 'medium') estimatedSize *= 0.6;
+                        if (quality === 'low') estimatedSize *= 0.3;
+                        if (format === 'mp4') estimatedSize *= 1.2;
+                        
+                        document.getElementById('estimatedSize').textContent = 
+                            `Estimated Size: ${(estimatedSize / (1024 * 1024)).toFixed(1)} MB`;
+                    }
+                    
+                    formatSelect.addEventListener('change', updateEstimatedSize);
+                    qualitySelect.addEventListener('change', updateEstimatedSize);
+                    updateEstimatedSize();
+
+                    startExport.addEventListener('click', async () => {
+                        try {
+                            const format = formatSelect.value;
+                            const quality = qualitySelect.value;
+                            let filename = filenameInput.value.trim();
+                            
+                            // Sanitize filename and ensure it has proper extension
+                            filename = filename.replace(/[^a-zA-Z0-9-_]/g, '-');
+                            if (!filename) filename = `recording-${Date.now()}`;
+                            const extension = format === 'mp4' ? '.mp4' : '.webm';
+                            if (!filename.toLowerCase().endsWith(extension)) {
+                                filename += extension;
+                            }
+                            
+                            // Show processing dialog
+                            const processingDialog = document.createElement('div');
+                            processingDialog.className = 'processing-dialog';
+                            processingDialog.innerHTML = `
+                                <div class="processing-content">
+                                    <h3>Processing Recording</h3>
+                                    <div class="progress-bar">
+                                        <div class="progress"></div>
+                                    </div>
+                                    <div class="processing-status">Preparing export...</div>
+                                </div>
+                            `;
+                            document.body.appendChild(processingDialog);
+                            
+                            // Process the recording
+                            let processedBlob = blob;
+                            if (quality !== 'high' || format === 'mp4') {
+                                processedBlob = await processRecording(blob, format, quality, (progress) => {
+                                    const progressBar = processingDialog.querySelector('.progress');
+                                    const status = processingDialog.querySelector('.processing-status');
+                                    progressBar.style.width = `${progress * 100}%`;
+                                    status.textContent = `Processing: ${Math.round(progress * 100)}%`;
+                                });
+                            }
+                            
+                            // Force download using a temporary anchor element
+                            const downloadUrl = URL.createObjectURL(processedBlob);
+                            const downloadLink = document.createElement('a');
+                            downloadLink.style.display = 'none';
+                            downloadLink.href = downloadUrl;
+                            downloadLink.download = filename; // This forces download instead of opening in new tab
+                            document.body.appendChild(downloadLink);
+                            
+                            // Trigger download
+                            downloadLink.click();
+                            
+                            // Cleanup
+                            setTimeout(() => {
+                                URL.revokeObjectURL(downloadUrl);
+                                document.body.removeChild(downloadLink);
+                            }, 100);
+                            
+                            document.body.removeChild(exportDialog);
+                            document.body.removeChild(processingDialog);
+                            
+                            // Log success
+                            logger.info(`Recording exported successfully: ${filename} (${(processedBlob.size / (1024 * 1024)).toFixed(1)} MB)`);
+                            
+                            resolve(processedBlob);
+                        } catch (error) {
+                            logger.error('Export failed', error);
+                            reject(error);
+                            document.body.removeChild(exportDialog);
+                            alert(`Export failed: ${error.message}`);
+                        }
+                    });
+
+                    cancelExport.addEventListener('click', () => {
+                        document.body.removeChild(exportDialog);
+                        resolve(blob); // Return original blob if cancelled
+                    });
+                });
+            } catch (error) {
+                logger.error('Error preparing recording for download', error);
+                throw error;
+            }
+        }
+
+        async function processRecording(blob, format, quality, progressCallback) {
+            try {
+                logger.debug('Starting recording processing', { format, quality, blobSize: blob.size });
+                // Create video element to process the recording
+                const video = document.createElement('video');
+                video.src = URL.createObjectURL(blob);
+                await video.load();
+                
+                // Create canvas for processing
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set quality parameters
+                const qualitySettings = {
+                    high: { bitrate: 2500000, scale: 1 },
+                    medium: { bitrate: 1500000, scale: 0.75 },
+                    low: { bitrate: 800000, scale: 0.5 }
+                };
+                
+                const settings = qualitySettings[quality];
+                canvas.width = video.videoWidth * settings.scale;
+                canvas.height = video.videoHeight * settings.scale;
+                
+                // Process the video
+                const chunks = [];
+                const stream = canvas.captureStream();
+                const recorder = new MediaRecorder(stream, {
+                    mimeType: format === 'mp4' ? 'video/mp4' : 'video/webm',
+                    videoBitsPerSecond: settings.bitrate
+                });
+                
+                recorder.ondataavailable = e => chunks.push(e.data);
+                
+                return new Promise((resolve, reject) => {
+                    recorder.onstop = () => {
+                        const processedBlob = new Blob(chunks, { type: format === 'mp4' ? 'video/mp4' : 'video/webm' });
+                        resolve(processedBlob);
+                    };
+                    
+                    video.onplay = () => {
+                        const processFrame = () => {
+                            if (video.paused || video.ended) {
+                                recorder.stop();
+                                return;
+                            }
+                            
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            progressCallback?.(video.currentTime / video.duration);
+                            requestAnimationFrame(processFrame);
+                        };
+                        
+                        recorder.start();
+                        processFrame();
+                    };
+                    
+                    video.play();
+                });
+            } catch (error) {
+                logger.error('Failed to process recording', error);
+                throw new Error(`Processing failed: ${error.message}`);
+            }
+        }
+
+        // Initialize the application
+        initializeApp().then(success => {
+            if (!success) {
+                document.getElementById("startRecording").disabled = true;
+            }
+        });
+
+        // Handle page unload
+        window.addEventListener('beforeunload', (e) => {
+            if (recorder && recorder.state !== 'inactive') {
+                e.preventDefault();
+                e.returnValue = 'Recording in progress. Are you sure you want to leave?';
+            }
+        });
+
+        // Theme toggle
         document.getElementById("toggleTheme").addEventListener("click", function() {
             darkMode = !darkMode;
             document.body.setAttribute("data-theme", darkMode ? "dark" : "light");
         });
 
+        // Start recording
         document.getElementById("startRecording").addEventListener("click", async function() {
-            let videoQuality = document.getElementById("video-quality").value;
-            let audioInput = document.getElementById("audio-input").value;
-
-            let constraints = {
-                video: { frameRate: videoQuality === "hd" ? 30 : 15 },
-                audio: audioInput !== "none",
-            };
-
             try {
-                stream = await navigator.mediaDevices.getDisplayMedia(constraints);
-                recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+                // Clear previous recording data
+                await cleanup();
+                
+                // Check disk space
+                await checkDiskSpace();
+                
+                const videoQuality = document.getElementById("video-quality").value;
+                const audioSource = document.getElementById("audio-source").value;
+                const micVolume = document.getElementById("mic-volume").value / 100;
+                const systemVolume = document.getElementById("system-volume").value / 100;
 
+                // Update UI
+                document.getElementById("recordingStatus").innerText = "Initializing...";
+                document.getElementById("markTime").disabled = true;
+
+                // Set up audio context for volume monitoring
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Get display media stream
+                stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { 
+                        frameRate: videoQuality === "hd" ? 30 : 15,
+                        width: videoQuality === "hd" ? 1920 : 1280,
+                        height: videoQuality === "hd" ? 1080 : 720
+                    },
+                    audio: true // Always request system audio
+                });
+
+                // Handle audio sources
+                let audioStream = null;
+                if (audioSource === "both" || audioSource === "microphone") {
+                    try {
+                        audioStream = await navigator.mediaDevices.getUserMedia({ 
+                            audio: {
+                                echoCancellation: true,
+                                noiseSuppression: true,
+                                autoGainControl: true
+                            }
+                        });
+                    } catch (e) {
+                        logger.warn('Could not get microphone access', e);
+                        if (audioSource === "microphone") {
+                            throw new Error("Microphone access is required but not available");
+                        }
+                    }
+                }
+
+                // Set up audio processing
+                if (audioStream) {
+                    const micSource = audioContext.createMediaStreamSource(audioStream);
+                    const micGain = audioContext.createGain();
+                    const micAnalyser = audioContext.createAnalyser();
+                    
+                    micGain.gain.value = micVolume;
+                    micSource.connect(micGain).connect(micAnalyser);
+                    
+                    // Update microphone meter
+                    const micMeter = document.getElementById("mic-meter");
+                    const micData = new Uint8Array(micAnalyser.frequencyBinCount);
+                    
+                    function updateMicMeter() {
+                        if (recorder && recorder.state === "recording") {
+                            micAnalyser.getByteFrequencyData(micData);
+                            const volume = Math.max(...micData) / 255 * 100;
+                            micMeter.innerHTML = `<div class="meter-fill" style="width: ${volume}%"></div>`;
+                            requestAnimationFrame(updateMicMeter);
+                        }
+                    }
+                    updateMicMeter();
+                }
+
+                // Set up system audio processing
+                const systemSource = audioContext.createMediaStreamSource(stream);
+                const systemGain = audioContext.createGain();
+                const systemAnalyser = audioContext.createAnalyser();
+                
+                systemGain.gain.value = systemVolume;
+                systemSource.connect(systemGain).connect(systemAnalyser);
+                
+                // Update system audio meter
+                const systemMeter = document.getElementById("system-meter");
+                const systemData = new Uint8Array(systemAnalyser.frequencyBinCount);
+                
+                function updateSystemMeter() {
+                    if (recorder && recorder.state === "recording") {
+                        systemAnalyser.getByteFrequencyData(systemData);
+                        const volume = Math.max(...systemData) / 255 * 100;
+                        systemMeter.innerHTML = `<div class="meter-fill" style="width: ${volume}%"></div>`;
+                        requestAnimationFrame(updateSystemMeter);
+                    }
+                }
+                updateSystemMeter();
+
+                // Combine audio streams if necessary
+                let finalStream = stream;
+                if (audioStream) {
+                    const audioTracks = [];
+                    if (audioSource !== "microphone") {
+                        audioTracks.push(stream.getAudioTracks()[0]);
+                    }
+                    if (audioSource !== "system") {
+                        audioTracks.push(audioStream.getAudioTracks()[0]);
+                    }
+                    
+                    finalStream = new MediaStream([
+                        ...stream.getVideoTracks(),
+                        ...audioTracks
+                    ]);
+                }
+                
+                // Set up MediaRecorder with error handling
+                try {
+                    recorder = new MediaRecorder(finalStream, { 
+                        mimeType: "video/webm;codecs=vp9,opus",
+                        videoBitsPerSecond: videoQuality === "hd" ? 2500000 : 1000000
+                    });
+                } catch (e) {
+                    recorder = new MediaRecorder(finalStream, { mimeType: "video/webm" });
+                }
+
+                // Show preview
                 document.querySelector(".floating-preview").style.display = "block";
                 document.getElementById("previewVideo").srcObject = stream;
 
-                recorder.ondataavailable = event => recordedChunks.push(event.data);
+                // Handle data
+                recorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                        
+                        // Check recording duration
+                        if (recordingDuration >= MAX_RECORDING_DURATION) {
+                            logger.warn('Maximum recording duration reached');
+                            recorder.stop();
+                        }
+                    }
+                };
                 
-                recorder.onstop = () => {
-                    const blob = new Blob(recordedChunks, { type: "video/webm" });
-                    const url = URL.createObjectURL(blob);
-
-                    document.getElementById("recordedVideo").src = url;
-                    document.getElementById("recordedVideo").style.display = "block";
-                    
-                    document.getElementById("downloadLink").href = url;
-                    document.getElementById("downloadLink").download = "screen-recording.webm";
-                    document.getElementById("downloadLink").innerText = "Download Recording";
-                    document.getElementById("downloadLink").style.display = "block";
-
-                    console.log("Markers:", markers);
+                // Handle errors
+                recorder.onerror = (event) => {
+                    logger.error('Recording error', event.error);
+                    cleanup();
+                    document.getElementById("recordingStatus").innerText = "Recording failed: " + event.error;
                 };
 
-                recorder.start();
-                document.getElementById("recordingStatus").innerText = "Recording...";
+                // Handle recording stop
+                recorder.onstop = async () => {
+                    try {
+                        clearInterval(recordingInterval);
+                        
+                        // Clean up old object URL
+                        const oldVideo = document.getElementById("recordedVideo");
+                        if (oldVideo.src) {
+                            URL.revokeObjectURL(oldVideo.src);
+                        }
+
+                        // Prepare recording
+                        const blob = await prepareRecordingForDownload(recordedChunks, videoQuality);
+                        const url = URL.createObjectURL(blob);
+
+                        // Update analytics
+                        analytics.recordingsCompleted++;
+                        analytics.lastRecordingSize = blob.size;
+                        analytics.totalDuration += recordingDuration;
+
+                        // Save to session
+                        session.addRecording(recordingDuration, blob.size, markers);
+
+                        // Show preview
+                        showRecordingPreview(blob);
+
+                        // Update UI
+                        document.getElementById("recordedVideo").src = url;
+                        document.getElementById("recordedVideo").style.display = "block";
+                        
+                        document.getElementById("downloadLink").href = url;
+                        document.getElementById("downloadLink").download = `screen-recording-${new Date().toISOString()}.webm`;
+                        document.getElementById("downloadLink").innerText = "Download Recording";
+                        document.getElementById("downloadLink").style.display = "block";
+
+                        // Cleanup
+                        await cleanup();
+                        
+                        logger.info('Recording completed successfully');
+                    } catch (error) {
+                        logger.error('Error processing recording', error);
+                        document.getElementById("recordingStatus").innerText = "Error processing recording";
+                    }
+                };
+
+                // Start recording
+                recorder.start(CHUNK_SIZE);
+                recordingStartTime = Date.now();
+                analytics.recordingsStarted++;
+                
+                // Update recording duration
+                recordingInterval = setInterval(() => {
+                    recordingDuration = Math.floor((Date.now() - recordingStartTime) / 1000);
+                    const remainingTime = MAX_RECORDING_DURATION - recordingDuration;
+                    
+                    document.getElementById("recordingStatus").innerText = 
+                        `Recording: ${Math.floor(recordingDuration / 60)}:${(recordingDuration % 60).toString().padStart(2, '0')} ` +
+                        `(${Math.floor(remainingTime / 60)}:${(remainingTime % 60).toString().padStart(2, '0')} remaining)`;
+                }, 1000);
+
+                // Enable controls
                 document.getElementById("startRecording").style.display = "none";
                 document.getElementById("stopRecording").style.display = "inline-block";
+                document.getElementById("markTime").disabled = false;
+
+                // Handle stream end
+                stream.getVideoTracks()[0].onended = () => {
+                    if (recorder && recorder.state !== 'inactive') {
+                        recorder.stop();
+                    }
+                };
+
+                logger.info('Recording started successfully');
             } catch (error) {
-                alert("Error: Unable to start recording. Check permissions.");
+                logger.error('Recording initialization error', error);
+                await cleanup();
+                document.getElementById("recordingStatus").innerText = "Failed to start recording";
+                alert("Error: Unable to start recording. " + error.message);
             }
         });
 
-        document.getElementById("markTime").addEventListener("click", function() {
-            markers.push(recorder.stream.getTracks()[0].enabled ? recordedChunks.length : null);
-            alert("Marker Added!");
+        // Stop recording
+        document.getElementById("stopRecording").addEventListener("click", function() {
+            if (recorder && recorder.state !== 'inactive') {
+                recorder.stop();
+            }
         });
 
+        // Mark time
+        document.getElementById("markTime").addEventListener("click", function() {
+            if (recorder && recorder.state === 'recording') {
+                const marker = {
+                    time: recordingDuration,
+                    chunk: recordedChunks.length,
+                    timestamp: new Date()
+                };
+                markers.push(marker);
+                
+                logger.info('Marker added', marker);
+                document.getElementById("recordingStatus").innerText += " (Marker added)";
+            }
+        });
+
+        // Close preview
         function closePreview() {
             document.querySelector(".floating-preview").style.display = "none";
         }
+
+        // Add CSS for new features
+        const style = document.createElement('style');
+        style.textContent = `
+            .preview-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            }
+
+            .preview-content {
+                background: var(--surface-primary);
+                padding: 20px;
+                border-radius: 12px;
+                max-width: 80%;
+                max-height: 80%;
+                overflow: auto;
+            }
+
+            .preview-controls {
+                margin-top: 10px;
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+            .preview-controls button {
+                flex: 1;
+                padding: 10px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                color: var(--surface-primary);
+                transition: background 0.3s;
+            }
+
+            .preview-controls button:first-child {
+                background: var(--primary);
+            }
+
+            .preview-controls button:last-child {
+                background: var(--record-button);
+            }
+
+            #diskSpaceWarning {
+                color: var(--record-button);
+                margin-top: 10px;
+                display: none;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Secondary panel functionality
+        function toggleSecondaryPanel() {
+            const panel = document.querySelector('.secondary-panel');
+            panel.classList.toggle('visible');
+        }
+
+        // Initialize the secondary panel
+        async function initializeSecondaryPanel() {
+            try {
+                await soundboardManager.initialize();
+                const precisionTimer = new PrecisionTimer();
+                const timerDisplay = document.querySelector('.timer-display');
+                
+                // Timer controls
+                document.getElementById('timerStart').addEventListener('click', () => {
+                    precisionTimer.start();
+                    updateTimer();
+                });
+
+                document.getElementById('timerStop').addEventListener('click', () => {
+                    precisionTimer.stop();
+                });
+
+                document.getElementById('timerReset').addEventListener('click', () => {
+                    precisionTimer.reset();
+                    timerDisplay.textContent = '00:00:00.000';
+                });
+
+                document.getElementById('timerLap').addEventListener('click', () => {
+                    if (precisionTimer.isRunning) {
+                        const time = precisionTimer.getFormattedTime();
+                        logger.info(`Lap time: ${time}`);
+                    }
+                });
+
+                function updateTimer() {
+                    if (precisionTimer.isRunning) {
+                        timerDisplay.textContent = precisionTimer.getFormattedTime();
+                        requestAnimationFrame(updateTimer);
+                    }
+                }
+
+                // Soundboard
+                document.querySelectorAll('.sound-button').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const soundKey = button.dataset.sound;
+                        soundboardManager.playSound(soundKey);
+                    });
+                });
+
+            } catch (error) {
+                logger.error('Error initializing secondary panel', error);
+                document.querySelector('.secondary-panel').innerHTML = `
+                    <div class="error-message">Failed to initialize tools: ${error.message}</div>
+                `;
+            }
+        }
+
+        // Initialize the secondary panel when the document is ready
+        document.addEventListener('DOMContentLoaded', initializeSecondaryPanel);
     </script>
 </body>
 </html>
