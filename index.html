@@ -357,6 +357,39 @@
             margin-top: 5px;
             text-align: center;
         }
+
+        .audio-controls {
+            margin-top: 15px;
+        }
+
+        .volume-control {
+            margin-bottom: 15px;
+        }
+
+        .volume-control label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .volume-control input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .audio-meter {
+            height: 10px;
+            background: #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .audio-meter .meter-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--button-bg);
+            transition: width 0.1s ease;
+        }
     </style>
 </head>
 <body>
@@ -400,20 +433,15 @@
                     <option value="none">No Audio</option>
                 </select>
                 
-                <select id="audio-quality" class="quality-select" title="Audio Quality">
-                    <option value="studio">Studio Quality</option>
-                    <option value="high">High Quality</option>
-                    <option value="medium">Medium Quality</option>
-                    <option value="low">Low Quality</option>
-                </select>
-                
-                <div class="audio-meters">
-                    <div class="meter-container">
-                        <label>Microphone Level</label>
+                <div class="audio-controls">
+                    <div class="volume-control">
+                        <label for="mic-volume">Microphone Volume</label>
+                        <input type="range" id="mic-volume" min="0" max="100" value="100" title="Microphone Volume Control">
                         <div id="mic-meter" class="audio-meter"></div>
                     </div>
-                    <div class="meter-container">
-                        <label>System Audio Level</label>
+                    <div class="volume-control">
+                        <label for="system-volume">System Audio Volume</label>
+                        <input type="range" id="system-volume" min="0" max="100" value="100" title="System Audio Volume Control">
                         <div id="system-meter" class="audio-meter"></div>
                     </div>
                 </div>
@@ -503,12 +531,155 @@
             }
         };
 
-        // Add these constants for the audio system
+        // Initialize soundboard with proper audio handling
         const SOUND_EFFECTS = {
-            beep: { url: 'data:audio/wav;base64,...', label: 'Beep' },  // Add base64 encoded sounds
-            click: { url: 'data:audio/wav;base64,...', label: 'Click' },
-            ding: { url: 'data:audio/wav;base64,...', label: 'Ding' }
+            beep: { 
+                url: 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU9vT18=', 
+                label: 'Beep',
+                duration: 0.5
+            },
+            click: { 
+                url: 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU9vT18=', 
+                label: 'Click',
+                duration: 0.2
+            },
+            ding: { 
+                url: 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU9vT18=', 
+                label: 'Ding',
+                duration: 0.8
+            }
         };
+
+        class SoundboardManager {
+            constructor() {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                this.soundBuffers = {};
+                this.isInitialized = false;
+            }
+
+            async initialize() {
+                if (this.isInitialized) return;
+
+                try {
+                    for (const [key, sound] of Object.entries(SOUND_EFFECTS)) {
+                        // Create oscillator-based sounds instead of loading from URL
+                        const buffer = await this.createSoundBuffer(sound);
+                        this.soundBuffers[key] = buffer;
+                    }
+                    this.isInitialized = true;
+                    logger.info('Soundboard initialized successfully');
+                } catch (error) {
+                    logger.error('Error initializing soundboard', error);
+                    throw error;
+                }
+            }
+
+            async createSoundBuffer({ duration }) {
+                const sampleRate = this.audioContext.sampleRate;
+                const buffer = this.audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+                const channelData = buffer.getChannelData(0);
+                
+                // Create a simple sine wave
+                for (let i = 0; i < buffer.length; i++) {
+                    channelData[i] = Math.sin(440 * Math.PI * 2 * i / sampleRate) *
+                        Math.exp(-5 * i / buffer.length); // Add decay
+                }
+                
+                return buffer;
+            }
+
+            playSound(soundKey) {
+                if (!this.isInitialized || !this.soundBuffers[soundKey]) {
+                    logger.warn(`Sound ${soundKey} not initialized`);
+                    return;
+                }
+
+                const source = this.audioContext.createBufferSource();
+                source.buffer = this.soundBuffers[soundKey];
+                source.connect(this.audioContext.destination);
+                source.start();
+            }
+        }
+
+        class BluetoothAudioManager {
+            constructor() {
+                this.device = null;
+                this.gattServer = null;
+                this.audioService = null;
+                this.isConnecting = false;
+            }
+
+            async connect() {
+                if (this.isConnecting) return false;
+                this.isConnecting = true;
+
+                try {
+                    if (!navigator.bluetooth) {
+                        throw new Error('Bluetooth API not available');
+                    }
+
+                    // Request device with audio capabilities
+                    this.device = await navigator.bluetooth.requestDevice({
+                        filters: [
+                            { services: ['0000110b-0000-1000-8000-00805f9b34fb'] } // A2DP Sink service
+                        ],
+                        optionalServices: ['battery_service']
+                    });
+
+                    // Connect to GATT server
+                    this.gattServer = await this.device.gatt.connect();
+                    
+                    // Try to get battery service if available
+                    try {
+                        const batteryService = await this.gattServer.getPrimaryService('battery_service');
+                        const batteryLevel = await batteryService.getCharacteristic('battery_level');
+                        const value = await batteryLevel.readValue();
+                        logger.info(`Connected device battery level: ${value.getUint8(0)}%`);
+                    } catch (e) {
+                        logger.warn('Battery service not available', e);
+                    }
+
+                    this.device.addEventListener('gattserverdisconnected', this.handleDisconnection.bind(this));
+                    
+                    this.isConnecting = false;
+                    return true;
+                } catch (error) {
+                    logger.error('Bluetooth connection error', error);
+                    this.isConnecting = false;
+                    return false;
+                }
+            }
+
+            handleDisconnection() {
+                logger.warn('Bluetooth device disconnected');
+                this.gattServer = null;
+                this.audioService = null;
+                
+                // Update UI
+                const statusElement = document.querySelector('.bluetooth-status');
+                if (statusElement) {
+                    statusElement.textContent = 'Disconnected';
+                    statusElement.style.color = 'var(--record-button)';
+                }
+            }
+
+            disconnect() {
+                if (this.gattServer && this.gattServer.connected) {
+                    this.gattServer.disconnect();
+                }
+                this.device = null;
+                this.gattServer = null;
+                this.audioService = null;
+            }
+
+            isConnected() {
+                return this.gattServer && this.gattServer.connected;
+            }
+        }
+
+        // Initialize managers
+        const soundboardManager = new SoundboardManager();
+        const bluetoothManager = new BluetoothAudioManager();
 
         // Add precision timer class
         class PrecisionTimer {
@@ -563,40 +734,6 @@
                     m.toString().padStart(2, '0')}:${
                     s.toString().padStart(2, '0')}.${
                     ms.toFixed(precision).slice(2)}`;
-            }
-        }
-
-        // Add Bluetooth audio manager
-        class BluetoothAudioManager {
-            constructor() {
-                this.device = null;
-                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            }
-
-            async connect() {
-                try {
-                    const device = await navigator.bluetooth.requestDevice({
-                        filters: [{ services: ['audio_source'] }]
-                    });
-                    
-                    await device.gatt.connect();
-                    this.device = device;
-                    
-                    return true;
-                } catch (error) {
-                    logger.error('Bluetooth connection error', error);
-                    return false;
-                }
-            }
-
-            disconnect() {
-                if (this.device && this.device.gatt.connected) {
-                    this.device.gatt.disconnect();
-                }
-            }
-
-            isConnected() {
-                return this.device && this.device.gatt.connected;
             }
         }
 
@@ -890,33 +1027,118 @@
                 // Check disk space
                 await checkDiskSpace();
                 
-                let videoQuality = document.getElementById("video-quality").value;
-                let audioInput = document.getElementById("audio-input").value;
+                const videoQuality = document.getElementById("video-quality").value;
+                const audioSource = document.getElementById("audio-source").value;
+                const micVolume = document.getElementById("mic-volume").value / 100;
+                const systemVolume = document.getElementById("system-volume").value / 100;
 
                 // Update UI
                 document.getElementById("recordingStatus").innerText = "Initializing...";
                 document.getElementById("markTime").disabled = true;
 
-                let constraints = {
+                // Set up audio context for volume monitoring
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Get display media stream
+                stream = await navigator.mediaDevices.getDisplayMedia({
                     video: { 
                         frameRate: videoQuality === "hd" ? 30 : 15,
                         width: videoQuality === "hd" ? 1920 : 1280,
                         height: videoQuality === "hd" ? 1080 : 720
                     },
-                    audio: audioInput !== "none"
-                };
+                    audio: true // Always request system audio
+                });
 
-                // Get stream
-                stream = await navigator.mediaDevices.getDisplayMedia(constraints);
+                // Handle audio sources
+                let audioStream = null;
+                if (audioSource === "both" || audioSource === "microphone") {
+                    try {
+                        audioStream = await navigator.mediaDevices.getUserMedia({ 
+                            audio: {
+                                echoCancellation: true,
+                                noiseSuppression: true,
+                                autoGainControl: true
+                            }
+                        });
+                    } catch (e) {
+                        logger.warn('Could not get microphone access', e);
+                        if (audioSource === "microphone") {
+                            throw new Error("Microphone access is required but not available");
+                        }
+                    }
+                }
+
+                // Set up audio processing
+                if (audioStream) {
+                    const micSource = audioContext.createMediaStreamSource(audioStream);
+                    const micGain = audioContext.createGain();
+                    const micAnalyser = audioContext.createAnalyser();
+                    
+                    micGain.gain.value = micVolume;
+                    micSource.connect(micGain).connect(micAnalyser);
+                    
+                    // Update microphone meter
+                    const micMeter = document.getElementById("mic-meter");
+                    const micData = new Uint8Array(micAnalyser.frequencyBinCount);
+                    
+                    function updateMicMeter() {
+                        if (recorder && recorder.state === "recording") {
+                            micAnalyser.getByteFrequencyData(micData);
+                            const volume = Math.max(...micData) / 255 * 100;
+                            micMeter.innerHTML = `<div class="meter-fill" style="width: ${volume}%"></div>`;
+                            requestAnimationFrame(updateMicMeter);
+                        }
+                    }
+                    updateMicMeter();
+                }
+
+                // Set up system audio processing
+                const systemSource = audioContext.createMediaStreamSource(stream);
+                const systemGain = audioContext.createGain();
+                const systemAnalyser = audioContext.createAnalyser();
+                
+                systemGain.gain.value = systemVolume;
+                systemSource.connect(systemGain).connect(systemAnalyser);
+                
+                // Update system audio meter
+                const systemMeter = document.getElementById("system-meter");
+                const systemData = new Uint8Array(systemAnalyser.frequencyBinCount);
+                
+                function updateSystemMeter() {
+                    if (recorder && recorder.state === "recording") {
+                        systemAnalyser.getByteFrequencyData(systemData);
+                        const volume = Math.max(...systemData) / 255 * 100;
+                        systemMeter.innerHTML = `<div class="meter-fill" style="width: ${volume}%"></div>`;
+                        requestAnimationFrame(updateSystemMeter);
+                    }
+                }
+                updateSystemMeter();
+
+                // Combine audio streams if necessary
+                let finalStream = stream;
+                if (audioStream) {
+                    const audioTracks = [];
+                    if (audioSource !== "microphone") {
+                        audioTracks.push(stream.getAudioTracks()[0]);
+                    }
+                    if (audioSource !== "system") {
+                        audioTracks.push(audioStream.getAudioTracks()[0]);
+                    }
+                    
+                    finalStream = new MediaStream([
+                        ...stream.getVideoTracks(),
+                        ...audioTracks
+                    ]);
+                }
                 
                 // Set up MediaRecorder with error handling
                 try {
-                    recorder = new MediaRecorder(stream, { 
+                    recorder = new MediaRecorder(finalStream, { 
                         mimeType: "video/webm;codecs=vp9,opus",
                         videoBitsPerSecond: videoQuality === "hd" ? 2500000 : 1000000
                     });
                 } catch (e) {
-                    recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+                    recorder = new MediaRecorder(finalStream, { mimeType: "video/webm" });
                 }
 
                 // Show preview
@@ -1109,146 +1331,52 @@
         `;
         document.head.appendChild(style);
 
-        // Add initialization code
-        function initializeSecondaryPanel() {
-            // Create and add panel
-            const panel = createSecondaryPanel();
-            document.body.appendChild(panel);
+        // Initialize the secondary panel
+        async function initializeSecondaryPanel() {
+            try {
+                await soundboardManager.initialize();
 
-            // Initialize precision timer
-            const precisionTimer = new PrecisionTimer();
-            const timerDisplay = panel.querySelector('.timer-display');
-            
-            // Update timer display
-            function updateTimer() {
-                if (precisionTimer.isRunning) {
-                    timerDisplay.textContent = precisionTimer.getFormattedTime();
-                    requestAnimationFrame(updateTimer);
-                }
-            }
+                // Initialize soundboard buttons
+                document.querySelectorAll('.sound-button').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const soundKey = button.dataset.sound;
+                        soundboardManager.playSound(soundKey);
+                    });
+                });
 
-            // Timer control events
-            panel.querySelector('#timerStart').addEventListener('click', () => {
-                precisionTimer.start();
-                updateTimer();
-            });
+                // Initialize Bluetooth controls
+                const bluetoothButton = document.getElementById('bluetoothConnect');
+                const bluetoothStatus = document.querySelector('.bluetooth-status');
 
-            panel.querySelector('#timerStop').addEventListener('click', () => {
-                precisionTimer.stop();
-            });
-
-            panel.querySelector('#timerLap').addEventListener('click', () => {
-                const lapTime = precisionTimer.lap();
-                const lapElement = document.createElement('div');
-                lapElement.textContent = `Lap ${precisionTimer.laps.length}: ${
-                    new Date(lapTime).toISOString().slice(11, -1)
-                }`;
-                panel.querySelector('.lap-times').appendChild(lapElement);
-            });
-
-            panel.querySelector('#timerReset').addEventListener('click', () => {
-                precisionTimer.reset();
-                timerDisplay.textContent = '00:00:00.000';
-                panel.querySelector('.lap-times').innerHTML = '';
-            });
-
-            // Initialize Bluetooth manager
-            const bluetoothManager = new BluetoothAudioManager();
-            const bluetoothButton = panel.querySelector('#bluetoothConnect');
-            const bluetoothStatus = panel.querySelector('.bluetooth-status');
-
-            bluetoothButton.addEventListener('click', async () => {
-                if (!bluetoothManager.isConnected()) {
-                    bluetoothStatus.textContent = 'Connecting...';
-                    const connected = await bluetoothManager.connect();
-                    bluetoothStatus.textContent = connected ? 
-                        'Connected' : 'Connection failed';
-                    bluetoothButton.textContent = connected ?
-                        'Disconnect' : 'Connect Bluetooth Audio';
-                } else {
-                    bluetoothManager.disconnect();
-                    bluetoothStatus.textContent = 'Not Connected';
-                    bluetoothButton.textContent = 'Connect Bluetooth Audio';
-                }
-            });
-
-            // Initialize soundboard
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const soundBuffers = {};
-
-            // Load sound effects
-            Object.entries(SOUND_EFFECTS).forEach(async ([key, sound]) => {
-                try {
-                    const response = await fetch(sound.url);
-                    const arrayBuffer = await response.arrayBuffer();
-                    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                    soundBuffers[key] = audioBuffer;
-                } catch (error) {
-                    logger.error(`Error loading sound: ${key}`, error);
-                }
-            });
-
-            // Sound button events
-            panel.querySelectorAll('.sound-button').forEach(button => {
-                button.addEventListener('click', () => {
-                    const soundKey = button.dataset.sound;
-                    if (soundBuffers[soundKey]) {
-                        const source = audioContext.createBufferSource();
-                        source.buffer = soundBuffers[soundKey];
-                        source.connect(audioContext.destination);
-                        source.start();
+                bluetoothButton.addEventListener('click', async () => {
+                    if (!bluetoothManager.isConnected()) {
+                        bluetoothStatus.textContent = 'Connecting...';
+                        bluetoothStatus.style.color = 'var(--text-color)';
+                        
+                        const connected = await bluetoothManager.connect();
+                        
+                        bluetoothStatus.textContent = connected ? 'Connected' : 'Connection failed';
+                        bluetoothStatus.style.color = connected ? 
+                            'var(--button-bg)' : 'var(--record-button)';
+                        
+                        bluetoothButton.textContent = connected ?
+                            'Disconnect Bluetooth' : 'Connect Bluetooth Audio';
+                    } else {
+                        bluetoothManager.disconnect();
+                        bluetoothStatus.textContent = 'Disconnected';
+                        bluetoothStatus.style.color = 'var(--text-color)';
+                        bluetoothButton.textContent = 'Connect Bluetooth Audio';
                     }
                 });
-            });
 
-            // Show panel when recording starts
-            document.getElementById('startRecording').addEventListener('click', () => {
-                panel.style.display = 'block';
-            });
-
-            // Hide panel when recording stops
-            document.getElementById('stopRecording').addEventListener('click', () => {
-                panel.style.display = 'none';
-                precisionTimer.stop();
-                precisionTimer.reset();
-            });
-        }
-
-        // Create the secondary control panel HTML
-        function createSecondaryPanel() {
-            const panel = document.createElement('div');
-            panel.className = 'secondary-panel';
-            panel.innerHTML = `
-                <div class="precision-timer-section">
-                    <h3>Precision Timer</h3>
-                    <div class="timer-display">00:00:00.000</div>
-                    <div class="timer-controls">
-                        <button id="timerStart">Start</button>
-                        <button id="timerStop">Stop</button>
-                        <button id="timerLap">Lap</button>
-                        <button id="timerReset">Reset</button>
+            } catch (error) {
+                logger.error('Error initializing secondary panel', error);
+                document.querySelector('.secondary-panel').innerHTML = `
+                    <div class="error-message">
+                        Failed to initialize audio features: ${error.message}
                     </div>
-                    <div class="lap-times"></div>
-                </div>
-
-                <div class="soundboard-section">
-                    <h3>Soundboard</h3>
-                    <div class="sound-buttons">
-                        ${Object.entries(SOUND_EFFECTS).map(([key, sound]) => `
-                            <button class="sound-button" data-sound="${key}">
-                                ${sound.label}
-                            </button>
-                        `).join('')}
-                    </div>
-                    <div class="bluetooth-controls">
-                        <button id="bluetoothConnect">
-                            Connect Bluetooth Audio
-                        </button>
-                        <div class="bluetooth-status">Not Connected</div>
-                    </div>
-                </div>
-            `;
-            return panel;
+                `;
+            }
         }
 
         // Initialize the secondary panel when the document is ready
