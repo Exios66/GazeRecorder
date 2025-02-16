@@ -9,57 +9,58 @@
         /* Color System and Theme Variables */
         :root {
             /* Base Colors - Dark Theme */
-            --primary-h: 145;
-            --primary-s: 63%;
-            --primary-l: 49%;
-            --primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
-            --primary-light: hsl(var(--primary-h), var(--primary-s), calc(var(--primary-l) + 15%));
-            --primary-dark: hsl(var(--primary-h), var(--primary-s), calc(var(--primary-l) - 15%));
+            --arctic-blue: hsl(199, 64%, 73%);
+            --deep-arctic: hsl(200, 65%, 12%);
+            --glacier-white: hsl(200, 20%, 98%);
+            --ice-blue: hsl(187, 100%, 89%);
+            --aurora-teal: hsl(174, 62%, 47%);
+            --neon-blue: hsl(196, 100%, 50%);
+            --navy-dark: hsl(215, 50%, 23%);
+            --aquamarine: hsl(160, 84%, 39%);
+            
+            /* Primary Colors */
+            --primary-h: 174;
+            --primary-s: 62%;
+            --primary-l: 47%;
+            --primary: var(--aurora-teal);
+            --primary-light: hsl(var(--primary-h), var(--primary-s), 57%);
+            --primary-dark: hsl(var(--primary-h), var(--primary-s), 37%);
 
-            --accent-h: 217;
-            --accent-s: 91%;
-            --accent-l: 60%;
-            --accent: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
-            --accent-light: hsl(var(--accent-h), var(--accent-s), calc(var(--accent-l) + 15%));
-            --accent-dark: hsl(var(--accent-h), var(--accent-s), calc(var(--accent-l) - 15%));
+            /* Accent Colors */
+            --accent-h: 196;
+            --accent-s: 100%;
+            --accent-l: 50%;
+            --accent: var(--neon-blue);
+            --accent-light: hsl(var(--accent-h), var(--accent-s), 60%);
+            --accent-dark: hsl(var(--accent-h), var(--accent-s), 40%);
 
-            --danger-h: 0;
-            --danger-s: 85%;
-            --danger-l: 60%;
-            --danger: hsl(var(--danger-h), var(--danger-s), var(--danger-l));
-            --danger-light: hsl(var(--danger-h), var(--danger-s), calc(var(--danger-l) + 15%));
-            --danger-dark: hsl(var(--danger-h), var(--danger-s), calc(var(--danger-l) - 15%));
-
-            --warning-h: 45;
-            --warning-s: 100%;
-            --warning-l: 51%;
-            --warning: hsl(var(--warning-h), var(--warning-s), var(--warning-l));
-
-            --success-h: 145;
-            --success-s: 63%;
-            --success-l: 42%;
-            --success: hsl(var(--success-h), var(--success-s), var(--success-l));
+            /* Status Colors */
+            --danger: hsl(0, 85%, 60%);
+            --danger-light: hsl(0, 85%, 70%);
+            --danger-dark: hsl(0, 85%, 50%);
+            --warning: hsl(45, 100%, 51%);
+            --success: var(--aquamarine);
 
             /* Neutral Colors - Dark Theme */
-            --bg-primary: hsl(220, 13%, 10%);
-            --bg-secondary: hsl(220, 13%, 15%);
-            --bg-tertiary: hsl(220, 13%, 20%);
+            --bg-primary: var(--deep-arctic);
+            --bg-secondary: hsl(200, 65%, 15%);
+            --bg-tertiary: hsl(200, 65%, 18%);
             
-            --surface-primary: hsl(220, 13%, 18%);
-            --surface-secondary: hsl(220, 13%, 23%);
-            --surface-tertiary: hsl(220, 13%, 28%);
+            --surface-primary: hsl(200, 65%, 16%);
+            --surface-secondary: hsl(200, 65%, 20%);
+            --surface-tertiary: hsl(200, 65%, 24%);
 
-            --text-primary: hsl(220, 13%, 95%);
-            --text-secondary: hsl(220, 13%, 80%);
-            --text-tertiary: hsl(220, 13%, 65%);
+            --text-primary: var(--glacier-white);
+            --text-secondary: hsl(200, 20%, 80%);
+            --text-tertiary: hsl(200, 20%, 65%);
             
             /* Semantic Colors */
-            --border-color: hsl(220, 13%, 25%);
-            --shadow-color: hsla(220, 13%, 5%, 0.2);
-            --overlay-color: hsla(220, 13%, 5%, 0.8);
+            --border-color: hsl(200, 65%, 25%);
+            --shadow-color: hsla(200, 65%, 5%, 0.2);
+            --overlay-color: hsla(200, 65%, 5%, 0.8);
 
             /* Component-specific colors */
-            --button-bg: var(--primary);
+            --button-bg: var(--aurora-teal);
             --button-hover: var(--primary-light);
             --button-active: var(--primary-dark);
             
@@ -69,9 +70,14 @@
 
             /* UI Elements */
             --meter-bg: var(--surface-secondary);
-            --meter-fill: var(--primary);
+            --meter-fill: var(--neon-blue);
             --meter-fill-warning: var(--warning);
             --meter-fill-danger: var(--danger);
+
+            /* Glass Effect */
+            --glass-bg: hsla(200, 65%, 20%, 0.8);
+            --glass-border: hsla(200, 65%, 40%, 0.3);
+            --glass-shadow: 0 8px 32px 0 hsla(200, 65%, 5%, 0.37);
 
             /* Transitions */
             --transition-speed: 0.3s;
@@ -81,29 +87,27 @@
         /* Light Theme Colors */
         [data-theme="light"] {
             /* Neutral Colors - Light Theme */
-            --bg-primary: hsl(220, 13%, 98%);
-            --bg-secondary: hsl(220, 13%, 95%);
-            --bg-tertiary: hsl(220, 13%, 90%);
+            --bg-primary: var(--glacier-white);
+            --bg-secondary: hsl(200, 20%, 95%);
+            --bg-tertiary: hsl(200, 20%, 90%);
             
-            --surface-primary: hsl(220, 13%, 100%);
-            --surface-secondary: hsl(220, 13%, 97%);
-            --surface-tertiary: hsl(220, 13%, 93%);
+            --surface-primary: hsl(200, 20%, 100%);
+            --surface-secondary: hsl(200, 20%, 97%);
+            --surface-tertiary: hsl(200, 20%, 93%);
 
-            --text-primary: hsl(220, 13%, 15%);
-            --text-secondary: hsl(220, 13%, 30%);
-            --text-tertiary: hsl(220, 13%, 45%);
+            --text-primary: var(--deep-arctic);
+            --text-secondary: hsl(200, 65%, 30%);
+            --text-tertiary: hsl(200, 65%, 45%);
 
             /* Adjusted Semantic Colors */
-            --border-color: hsl(220, 13%, 85%);
-            --shadow-color: hsla(220, 13%, 5%, 0.1);
-            --overlay-color: hsla(220, 13%, 5%, 0.6);
+            --border-color: hsl(200, 20%, 85%);
+            --shadow-color: hsla(200, 65%, 5%, 0.1);
+            --overlay-color: hsla(200, 65%, 5%, 0.6);
 
-            /* Adjusted Component Colors */
-            --primary-l: 42%;
-            --accent-l: 45%;
-            --danger-l: 45%;
-            --warning-l: 45%;
-            --success-l: 35%;
+            /* Glass Effect - Light */
+            --glass-bg: hsla(200, 20%, 100%, 0.8);
+            --glass-border: hsla(200, 20%, 40%, 0.3);
+            --glass-shadow: 0 8px 32px 0 hsla(200, 20%, 5%, 0.37);
         }
 
         /* Base Styles */
@@ -116,33 +120,40 @@
 
         /* Component Styles */
         .screen-recorder-container {
-            background: var(--surface-primary);
-            box-shadow: 0 8px 16px var(--shadow-color);
-            border: 1px solid var(--border-color);
-            transition: background-color var(--transition-speed) var(--transition-timing),
-                      border-color var(--transition-speed) var(--transition-timing),
-                      box-shadow var(--transition-speed) var(--transition-timing);
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            transition: all var(--transition-speed) var(--transition-timing);
         }
 
         button {
             background: var(--button-bg);
-            color: var(--surface-primary);
+            color: var(--glacier-white);
             border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
+            padding: 12px 24px;
+            border-radius: 8px;
             font-weight: 500;
-            transition: background-color var(--transition-speed) var(--transition-timing),
-                      transform var(--transition-speed) var(--transition-timing);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 14px;
+            transition: all var(--transition-speed) var(--transition-timing);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 6px hsla(200, 65%, 5%, 0.1);
         }
 
         button:hover {
             background: var(--button-hover);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px hsla(200, 65%, 5%, 0.2);
         }
 
         button:active {
             background: var(--button-active);
             transform: translateY(0);
+            box-shadow: 0 2px 4px hsla(200, 65%, 5%, 0.1);
         }
 
         #startRecording {
@@ -154,53 +165,55 @@
         }
 
         .quality-select {
-            background: var(--surface-secondary);
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+            border: 1px solid var(--glass-border);
             color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            transition: background-color var(--transition-speed) var(--transition-timing),
-                      border-color var(--transition-speed) var(--transition-timing);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all var(--transition-speed) var(--transition-timing);
+        }
+
+        .quality-select:hover {
+            border-color: var(--aurora-teal);
+        }
+
+        .quality-select:focus {
+            border-color: var(--neon-blue);
+            outline: none;
+            box-shadow: 0 0 0 2px hsla(196, 100%, 50%, 0.2);
         }
 
         .audio-meter {
             background: var(--meter-bg);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--glass-border);
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
         }
 
         .audio-meter .meter-fill {
-            background: var(--meter-fill);
-            transition: width 0.1s ease, background-color 0.3s ease;
-        }
-
-        .audio-meter .meter-fill[data-level="warning"] {
-            background: var(--meter-fill-warning);
-        }
-
-        .audio-meter .meter-fill[data-level="danger"] {
-            background: var(--meter-fill-danger);
+            background: linear-gradient(90deg, var(--aurora-teal), var(--neon-blue));
+            height: 100%;
+            transition: width 0.1s ease;
         }
 
         .floating-preview {
-            background: var(--surface-tertiary);
-            box-shadow: 0 4px 12px var(--shadow-color);
-            border: 1px solid var(--border-color);
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
         }
 
         .secondary-panel {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--surface-primary);
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px var(--shadow-color);
-            width: 250px;
-            z-index: 1000;
-            transform: translateX(110%);
-            transition: transform var(--transition-speed) var(--transition-timing);
-        }
-
-        .secondary-panel.visible {
-            transform: translateX(0);
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
         }
 
         .panel-section {
@@ -224,13 +237,15 @@
         }
 
         .timer-display {
+            background: var(--deep-arctic);
+            color: var(--neon-blue);
             font-family: 'SF Mono', 'Consolas', monospace;
-            font-size: 20px;
-            padding: 8px;
-            background: var(--surface-secondary);
-            border-radius: 6px;
+            font-size: 24px;
+            padding: 16px;
+            border-radius: 8px;
             text-align: center;
-            margin-bottom: 8px;
+            margin-bottom: 16px;
+            text-shadow: 0 0 10px hsla(196, 100%, 50%, 0.5);
         }
 
         .timer-controls {
@@ -258,31 +273,6 @@
             color: var(--surface-primary);
         }
 
-        .toggle-panel {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--accent);
-            color: var(--surface-primary);
-            padding: 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            z-index: 999;
-            border: none;
-            width: auto;
-            font-size: 14px;
-        }
-
-        .sound-button {
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            background: var(--accent);
-            color: var(--surface-primary);
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
         .sound-button:hover {
             background: var(--accent-light);
         }
@@ -304,11 +294,9 @@
         }
 
         .error-message {
-            color: var(--danger);
-            background: var(--surface-tertiary);
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid var(--danger);
+            background: var(--glass-bg);
+            border-left: 4px solid var(--danger);
+            box-shadow: var(--glass-shadow);
         }
 
         /* General Styles */
@@ -635,6 +623,25 @@
             border: none;
             width: auto;
             font-size: 14px;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--surface-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--aurora-teal);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-blue);
         }
     </style>
 </head>
