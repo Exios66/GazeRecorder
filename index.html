@@ -758,19 +758,238 @@
             lastRecordingSize: 0
         };
 
-        // Logger
+        // Enhanced Logger with better error handling and debugging
         const logger = {
-            info: (message) => {
-                console.log(`[INFO][${new Date().toISOString()}] ${message}`);
+            logHistory: [],
+            maxLogHistory: 1000,
+            
+            _formatMessage: function(level, message, error = null) {
+                const timestamp = new Date().toISOString();
+                const errorDetails = error ? {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name,
+                    code: error.code
+                } : null;
+                
+                return {
+                    timestamp,
+                    level,
+                    message,
+                    error: errorDetails
+                };
             },
-            error: (message, error) => {
-                console.error(`[ERROR][${new Date().toISOString()}] ${message}`, error);
-                analytics.errors.push({ timestamp: new Date(), message, error: error?.message });
+            
+            _addToHistory: function(logEntry) {
+                this.logHistory.push(logEntry);
+                if (this.logHistory.length > this.maxLogHistory) {
+                    this.logHistory.shift();
+                }
             },
-            warn: (message) => {
-                console.warn(`[WARN][${new Date().toISOString()}] ${message}`);
+            
+            info: function(message) {
+                const logEntry = this._formatMessage('INFO', message);
+                this._addToHistory(logEntry);
+                console.log(`[INFO][${logEntry.timestamp}] ${message}`);
+            },
+            
+            warn: function(message, error = null) {
+                const logEntry = this._formatMessage('WARN', message, error);
+                this._addToHistory(logEntry);
+                console.warn(`[WARN][${logEntry.timestamp}] ${message}`, error || '');
+            },
+            
+            error: function(message, error = null) {
+                const logEntry = this._formatMessage('ERROR', message, error);
+                this._addToHistory(logEntry);
+                console.error(`[ERROR][${logEntry.timestamp}] ${message}`, error || '');
+                this._updateErrorDisplay(logEntry);
+                
+                // Add to analytics
+                analytics.errors.push(logEntry);
+            },
+            
+            debug: function(message, data = null) {
+                const logEntry = this._formatMessage('DEBUG', message, data);
+                this._addToHistory(logEntry);
+                console.debug(`[DEBUG][${logEntry.timestamp}] ${message}`, data || '');
+            },
+            
+            _updateErrorDisplay: function(logEntry) {
+                const errorContainer = document.getElementById('errorContainer') || this._createErrorContainer();
+                const errorElement = document.createElement('div');
+                errorElement.className = 'error-message';
+                errorElement.innerHTML = `
+                    <div class="error-header">
+                        <span class="error-timestamp">${new Date(logEntry.timestamp).toLocaleTimeString()}</span>
+                        <span class="error-close" onclick="this.parentElement.parentElement.remove()">×</span>
+                    </div>
+                    <div class="error-content">
+                        <div class="error-text">${logEntry.message}</div>
+                        ${logEntry.error ? `<div class="error-details">${logEntry.error.message}</div>` : ''}
+                    </div>
+                `;
+                
+                errorContainer.appendChild(errorElement);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (errorElement.parentNode) {
+                        errorElement.remove();
+                    }
+                }, 5000);
+            },
+            
+            _createErrorContainer: function() {
+                const container = document.createElement('div');
+                container.id = 'errorContainer';
+                container.className = 'error-container';
+                document.body.appendChild(container);
+                return container;
+            },
+            
+            getLogHistory: function() {
+                return this.logHistory;
+            },
+            
+            downloadLogs: function() {
+                const logData = JSON.stringify(this.logHistory, null, 2);
+                const blob = new Blob([logData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `screen-recorder-logs-${new Date().toISOString()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
             }
         };
+
+        // Add error handling styles
+        const errorStyles = document.createElement('style');
+        errorStyles.textContent = `
+            .error-container {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 9999;
+                max-width: 400px;
+                max-height: 80vh;
+                overflow-y: auto;
+                pointer-events: none;
+            }
+            
+            .error-message {
+                background: var(--surface-primary);
+                border-left: 4px solid var(--danger);
+                margin-bottom: 10px;
+                padding: 10px;
+                border-radius: 4px;
+                box-shadow: 0 2px 8px var(--shadow-color);
+                pointer-events: auto;
+                animation: slideIn 0.3s ease-out;
+            }
+            
+            .error-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 5px;
+            }
+            
+            .error-timestamp {
+                font-size: 12px;
+                color: var(--text-secondary);
+            }
+            
+            .error-close {
+                cursor: pointer;
+                padding: 0 5px;
+                color: var(--text-secondary);
+            }
+            
+            .error-close:hover {
+                color: var(--danger);
+            }
+            
+            .error-content {
+                font-size: 14px;
+            }
+            
+            .error-text {
+                color: var(--text-primary);
+                margin-bottom: 5px;
+            }
+            
+            .error-details {
+                color: var(--text-secondary);
+                font-size: 12px;
+                font-family: monospace;
+                white-space: pre-wrap;
+                margin-top: 5px;
+            }
+            
+            @keyframes slideIn {
+                from {
+                    transform: translateX(-100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            .debug-panel {
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                background: var(--surface-primary);
+                padding: 10px;
+                border-radius: 4px;
+                box-shadow: 0 2px 8px var(--shadow-color);
+                z-index: 9999;
+                display: none;
+            }
+            
+            .debug-panel.visible {
+                display: block;
+            }
+            
+            .debug-panel button {
+                margin: 5px;
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+        `;
+        document.head.appendChild(errorStyles);
+
+        // Add debug panel
+        const debugPanel = document.createElement('div');
+        debugPanel.className = 'debug-panel';
+        debugPanel.innerHTML = `
+            <button onclick="logger.downloadLogs()">Download Logs</button>
+            <button onclick="console.table(logger.getLogHistory())">Show Logs in Console</button>
+        `;
+        document.body.appendChild(debugPanel);
+
+        // Add keyboard shortcut for debug panel (Ctrl/Cmd + Shift + D)
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
+                debugPanel.classList.toggle('visible');
+            }
+        });
+
+        // Enhanced error handling for async operations
+        window.addEventListener('unhandledrejection', (event) => {
+            logger.error('Unhandled Promise Rejection', event.reason);
+        });
+
+        window.addEventListener('error', (event) => {
+            logger.error('Uncaught Error', event.error);
+        });
 
         // Initialize soundboard with proper audio handling
         const SOUND_EFFECTS = {
@@ -1200,6 +1419,7 @@
         // Enhanced cleanup function
         async function cleanup() {
             try {
+                logger.debug('Starting cleanup');
                 if (stream) {
                     stream.getTracks().forEach(track => track.stop());
                 }
@@ -1231,7 +1451,19 @@
                 
                 logger.info('Cleanup completed successfully');
             } catch (error) {
-                logger.error('Error during cleanup', error);
+                logger.error('Cleanup failed', error);
+                // Continue with partial cleanup
+                try {
+                    // Minimal cleanup for critical resources
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+                    if (recorder && recorder.state !== 'inactive') {
+                        recorder.stop();
+                    }
+                } catch (criticalError) {
+                    logger.error('Critical cleanup failed', criticalError);
+                }
             }
         }
 
@@ -1431,6 +1663,7 @@
 
         async function processRecording(blob, format, quality, progressCallback) {
             try {
+                logger.debug('Starting recording processing', { format, quality, blobSize: blob.size });
                 // Create video element to process the recording
                 const video = document.createElement('video');
                 video.src = URL.createObjectURL(blob);
@@ -1486,8 +1719,8 @@
                     video.play();
                 });
             } catch (error) {
-                logger.error('Error processing recording', error);
-                throw error;
+                logger.error('Failed to process recording', error);
+                throw new Error(`Processing failed: ${error.message}`);
             }
         }
 
