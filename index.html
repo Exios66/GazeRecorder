@@ -6,37 +6,238 @@
     <title>Advanced Screen Recorder</title>
     <script src="https://api.apowersoft.com/screen-recorder?lang=en" defer></script>
     <style>
-        /* General Styles */
+        /* Color System and Theme Variables */
         :root {
-            --bg-color: #121212;
-            --text-color: white;
-            --card-bg: #1e1e1e;
-            --button-bg: #4CAF50;
-            --button-hover: #45a049;
-            --record-button: #f44336;
-            --record-button-hover: #d32f2f;
-            --toggle-bg: #007bff;
-            --toggle-hover: #0056b3;
+            /* Base Colors - Dark Theme */
+            --primary-h: 145;
+            --primary-s: 63%;
+            --primary-l: 49%;
+            --primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+            --primary-light: hsl(var(--primary-h), var(--primary-s), calc(var(--primary-l) + 15%));
+            --primary-dark: hsl(var(--primary-h), var(--primary-s), calc(var(--primary-l) - 15%));
+
+            --accent-h: 217;
+            --accent-s: 91%;
+            --accent-l: 60%;
+            --accent: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+            --accent-light: hsl(var(--accent-h), var(--accent-s), calc(var(--accent-l) + 15%));
+            --accent-dark: hsl(var(--accent-h), var(--accent-s), calc(var(--accent-l) - 15%));
+
+            --danger-h: 0;
+            --danger-s: 85%;
+            --danger-l: 60%;
+            --danger: hsl(var(--danger-h), var(--danger-s), var(--danger-l));
+            --danger-light: hsl(var(--danger-h), var(--danger-s), calc(var(--danger-l) + 15%));
+            --danger-dark: hsl(var(--danger-h), var(--danger-s), calc(var(--danger-l) - 15%));
+
+            --warning-h: 45;
+            --warning-s: 100%;
+            --warning-l: 51%;
+            --warning: hsl(var(--warning-h), var(--warning-s), var(--warning-l));
+
+            --success-h: 145;
+            --success-s: 63%;
+            --success-l: 42%;
+            --success: hsl(var(--success-h), var(--success-s), var(--success-l));
+
+            /* Neutral Colors - Dark Theme */
+            --bg-primary: hsl(220, 13%, 10%);
+            --bg-secondary: hsl(220, 13%, 15%);
+            --bg-tertiary: hsl(220, 13%, 20%);
+            
+            --surface-primary: hsl(220, 13%, 18%);
+            --surface-secondary: hsl(220, 13%, 23%);
+            --surface-tertiary: hsl(220, 13%, 28%);
+
+            --text-primary: hsl(220, 13%, 95%);
+            --text-secondary: hsl(220, 13%, 80%);
+            --text-tertiary: hsl(220, 13%, 65%);
+            
+            /* Semantic Colors */
+            --border-color: hsl(220, 13%, 25%);
+            --shadow-color: hsla(220, 13%, 5%, 0.2);
+            --overlay-color: hsla(220, 13%, 5%, 0.8);
+
+            /* Component-specific colors */
+            --button-bg: var(--primary);
+            --button-hover: var(--primary-light);
+            --button-active: var(--primary-dark);
+            
+            --record-button: var(--danger);
+            --record-button-hover: var(--danger-light);
+            --record-button-active: var(--danger-dark);
+
+            /* UI Elements */
+            --meter-bg: var(--surface-secondary);
+            --meter-fill: var(--primary);
+            --meter-fill-warning: var(--warning);
+            --meter-fill-danger: var(--danger);
+
+            /* Transitions */
+            --transition-speed: 0.3s;
+            --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* Light Theme Colors */
         [data-theme="light"] {
-            --bg-color: #f4f4f4;
-            --text-color: #121212;
-            --card-bg: white;
-            --button-bg: #008cba;
-            --button-hover: #0078a0;
-            --record-button: #ff4c4c;
-            --record-button-hover: #d32f2f;
-            --toggle-bg: #ffcc00;
-            --toggle-hover: #e6b800;
+            /* Neutral Colors - Light Theme */
+            --bg-primary: hsl(220, 13%, 98%);
+            --bg-secondary: hsl(220, 13%, 95%);
+            --bg-tertiary: hsl(220, 13%, 90%);
+            
+            --surface-primary: hsl(220, 13%, 100%);
+            --surface-secondary: hsl(220, 13%, 97%);
+            --surface-tertiary: hsl(220, 13%, 93%);
+
+            --text-primary: hsl(220, 13%, 15%);
+            --text-secondary: hsl(220, 13%, 30%);
+            --text-tertiary: hsl(220, 13%, 45%);
+
+            /* Adjusted Semantic Colors */
+            --border-color: hsl(220, 13%, 85%);
+            --shadow-color: hsla(220, 13%, 5%, 0.1);
+            --overlay-color: hsla(220, 13%, 5%, 0.6);
+
+            /* Adjusted Component Colors */
+            --primary-l: 42%;
+            --accent-l: 45%;
+            --danger-l: 45%;
+            --warning-l: 45%;
+            --success-l: 35%;
         }
 
+        /* Base Styles */
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color var(--transition-speed) var(--transition-timing),
+                      color var(--transition-speed) var(--transition-timing);
+        }
+
+        /* Component Styles */
+        .screen-recorder-container {
+            background: var(--surface-primary);
+            box-shadow: 0 8px 16px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            transition: background-color var(--transition-speed) var(--transition-timing),
+                      border-color var(--transition-speed) var(--transition-timing),
+                      box-shadow var(--transition-speed) var(--transition-timing);
+        }
+
+        button {
+            background: var(--button-bg);
+            color: var(--surface-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background-color var(--transition-speed) var(--transition-timing),
+                      transform var(--transition-speed) var(--transition-timing);
+        }
+
+        button:hover {
+            background: var(--button-hover);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            background: var(--button-active);
+            transform: translateY(0);
+        }
+
+        #startRecording {
+            background: var(--success);
+        }
+
+        #stopRecording {
+            background: var(--danger);
+        }
+
+        .quality-select {
+            background: var(--surface-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            transition: background-color var(--transition-speed) var(--transition-timing),
+                      border-color var(--transition-speed) var(--transition-timing);
+        }
+
+        .audio-meter {
+            background: var(--meter-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .audio-meter .meter-fill {
+            background: var(--meter-fill);
+            transition: width 0.1s ease, background-color 0.3s ease;
+        }
+
+        .audio-meter .meter-fill[data-level="warning"] {
+            background: var(--meter-fill-warning);
+        }
+
+        .audio-meter .meter-fill[data-level="danger"] {
+            background: var(--meter-fill-danger);
+        }
+
+        .floating-preview {
+            background: var(--surface-tertiary);
+            box-shadow: 0 4px 12px var(--shadow-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .secondary-panel {
+            background: var(--surface-secondary);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .timer-display {
+            background: var(--surface-tertiary);
+            color: var(--text-primary);
+            font-family: 'SF Mono', 'Consolas', monospace;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .sound-button {
+            background: var(--accent);
+            color: var(--surface-primary);
+        }
+
+        .sound-button:hover {
+            background: var(--accent-light);
+        }
+
+        .sound-button:active {
+            background: var(--accent-dark);
+        }
+
+        .bluetooth-status {
+            color: var(--text-secondary);
+        }
+
+        .bluetooth-status[data-status="connected"] {
+            color: var(--success);
+        }
+
+        .bluetooth-status[data-status="disconnected"] {
+            color: var(--danger);
+        }
+
+        .error-message {
+            color: var(--danger);
+            background: var(--surface-tertiary);
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--danger);
+        }
+
+        /* General Styles */
         body {
             font-family: 'Arial', sans-serif;
             text-align: center;
             margin: 0;
-            background: var(--bg-color);
-            color: var(--text-color);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -45,10 +246,8 @@
         }
 
         .screen-recorder-container {
-            background: var(--card-bg);
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
             width: 90%;
             max-width: 500px;
             text-align: center;
@@ -72,19 +271,8 @@
             transition: all 0.3s;
         }
 
-        #startRecording {
-            background: var(--button-bg);
-            color: white;
-        }
-
         #startRecording:hover {
             background: var(--button-hover);
-        }
-
-        #stopRecording {
-            background: var(--record-button);
-            color: white;
-            display: none;
         }
 
         #stopRecording:hover {
@@ -92,12 +280,12 @@
         }
 
         #toggleTheme {
-            background: var(--toggle-bg);
-            color: white;
+            background: var(--primary);
+            color: var(--surface-primary);
         }
 
         #toggleTheme:hover {
-            background: var(--toggle-hover);
+            background: var(--primary-light);
         }
 
         .status {
@@ -116,15 +304,15 @@
             display: none;
             text-decoration: none;
             padding: 10px;
-            background: var(--toggle-bg);
-            color: white;
+            background: var(--primary);
+            color: var(--surface-primary);
             border-radius: 5px;
             margin-top: 10px;
             transition: background 0.3s;
         }
 
         #downloadLink:hover {
-            background: var(--toggle-hover);
+            background: var(--primary-light);
         }
 
         /* Floating Preview */
@@ -170,7 +358,7 @@
         }
 
         .processing-content {
-            background: var(--card-bg);
+            background: var(--surface-primary);
             padding: 20px;
             border-radius: 12px;
             text-align: center;
@@ -287,7 +475,7 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            background: var(--card-bg);
+            background: var(--surface-primary);
             padding: 15px;
             border-radius: 12px;
             box-shadow: 0 0 10px rgba(0,0,0,0.3);
@@ -336,14 +524,18 @@
             padding: 10px;
             border: none;
             border-radius: 5px;
-            background: var(--button-bg);
-            color: white;
+            background: var(--accent);
+            color: var(--surface-primary);
             cursor: pointer;
             transition: background 0.3s;
         }
 
         .sound-button:hover {
-            background: var(--button-hover);
+            background: var(--accent-light);
+        }
+
+        .sound-button:active {
+            background: var(--accent-dark);
         }
 
         .bluetooth-controls {
@@ -1385,7 +1577,7 @@
             }
 
             .preview-content {
-                background: var(--card-bg);
+                background: var(--surface-primary);
                 padding: 20px;
                 border-radius: 12px;
                 max-width: 80%;
@@ -1406,12 +1598,12 @@
                 border: none;
                 border-radius: 5px;
                 cursor: pointer;
-                color: white;
+                color: var(--surface-primary);
                 transition: background 0.3s;
             }
 
             .preview-controls button:first-child {
-                background: var(--button-bg);
+                background: var(--primary);
             }
 
             .preview-controls button:last-child {
@@ -1446,20 +1638,20 @@
                 bluetoothButton.addEventListener('click', async () => {
                     if (!bluetoothManager.isConnected()) {
                         bluetoothStatus.textContent = 'Connecting...';
-                        bluetoothStatus.style.color = 'var(--text-color)';
+                        bluetoothStatus.style.color = 'var(--text-primary)';
                         
                         const connected = await bluetoothManager.connect();
                         
                         bluetoothStatus.textContent = connected ? 'Connected' : 'Connection failed';
                         bluetoothStatus.style.color = connected ? 
-                            'var(--button-bg)' : 'var(--record-button)';
+                            'var(--primary)' : 'var(--record-button)';
                         
                         bluetoothButton.textContent = connected ?
                             'Disconnect Bluetooth' : 'Connect Bluetooth Audio';
                     } else {
                         bluetoothManager.disconnect();
                         bluetoothStatus.textContent = 'Disconnected';
-                        bluetoothStatus.style.color = 'var(--text-color)';
+                        bluetoothStatus.style.color = 'var(--text-primary)';
                         bluetoothButton.textContent = 'Connect Bluetooth Audio';
                     }
                 });
