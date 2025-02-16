@@ -196,62 +196,530 @@
         let recordedChunks = [];
         let markers = [];
         let darkMode = true;
+        let recordingStartTime;
+        let recordingDuration;
+        let recordingInterval;
+        
+        // Constants
+        const MAX_RECORDING_DURATION = 3600; // 1 hour in seconds
+        const MIN_DISK_SPACE = 500 * 1024 * 1024; // 500MB in bytes
+        const CHUNK_SIZE = 1000; // 1 second chunks
+        
+        // Analytics data
+        const analytics = {
+            recordingsStarted: 0,
+            recordingsCompleted: 0,
+            totalDuration: 0,
+            errors: [],
+            lastRecordingSize: 0
+        };
 
+        // Logger
+        const logger = {
+            info: (message) => {
+                console.log(`[INFO][${new Date().toISOString()}] ${message}`);
+            },
+            error: (message, error) => {
+                console.error(`[ERROR][${new Date().toISOString()}] ${message}`, error);
+                analytics.errors.push({ timestamp: new Date(), message, error: error?.message });
+            },
+            warn: (message) => {
+                console.warn(`[WARN][${new Date().toISOString()}] ${message}`);
+            }
+        };
+
+        // Check available disk space
+        async function checkDiskSpace() {
+            try {
+                if ('storage' in navigator && 'estimate' in navigator.storage) {
+                    const { quota, usage } = await navigator.storage.estimate();
+                    const available = quota - usage;
+                    if (available < MIN_DISK_SPACE) {
+                        throw new Error(`Insufficient disk space. Need at least ${MIN_DISK_SPACE / (1024 * 1024)}MB`);
+                    }
+                    return true;
+                }
+                logger.warn('Storage estimation API not available');
+                return true;
+            } catch (error) {
+                logger.error('Error checking disk space', error);
+                throw error;
+            }
+        }
+
+        // Check and request permissions
+        async function checkAndRequestPermissions() {
+            try {
+                const permissions = {
+                    microphone: false,
+                    camera: false,
+                    displayMedia: false
+                };
+
+                // Check microphone permission
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        stream.getTracks().forEach(track => track.stop());
+                        permissions.microphone = true;
+                    } catch (e) {
+                        logger.warn('Microphone permission denied', e);
+                    }
+                }
+
+                // Check camera permission (for potential future use)
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                        stream.getTracks().forEach(track => track.stop());
+                        permissions.camera = true;
+                    } catch (e) {
+                        logger.warn('Camera permission denied', e);
+                    }
+                }
+
+                // Check display capture permission
+                if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+                    permissions.displayMedia = true;
+                }
+
+                return permissions;
+            } catch (error) {
+                logger.error('Error checking permissions', error);
+                throw error;
+            }
+        }
+
+        // Compression worker for large recordings
+        const compressionWorker = new Worker(URL.createObjectURL(new Blob([`
+            self.onmessage = async function(e) {
+                try {
+                    const { chunks, quality } = e.data;
+                    const blob = new Blob(chunks, { type: 'video/webm' });
+                    
+                    // Create compressed version
+                    const compressedBlob = await new Promise((resolve) => {
+                        const canvas = new OffscreenCanvas(1280, 720);
+                        const ctx = canvas.getContext('2d');
+                        const video = new Video();
+                        
+                        video.src = URL.createObjectURL(blob);
+                        video.onloadedmetadata = () => {
+                            const stream = canvas.captureStream(30);
+                            const recorder = new MediaRecorder(stream, {
+                                videoBitsPerSecond: quality === 'hd' ? 1500000 : 800000
+                            });
+                            
+                            const compressedChunks = [];
+                            recorder.ondataavailable = e => compressedChunks.push(e.data);
+                            recorder.onstop = () => resolve(new Blob(compressedChunks, { type: 'video/webm' }));
+                            
+                            video.play();
+                            recorder.start();
+                            
+                            video.onended = () => recorder.stop();
+                        };
+                    });
+                    
+                    self.postMessage({ success: true, blob: compressedBlob });
+                } catch (error) {
+                    self.postMessage({ success: false, error: error.message });
+                }
+            };
+        `], { type: 'text/javascript' })));
+
+        // Session management
+        const session = {
+            id: crypto.randomUUID(),
+            startTime: new Date(),
+            recordings: [],
+            
+            addRecording(duration, size, markers) {
+                this.recordings.push({
+                    id: crypto.randomUUID(),
+                    timestamp: new Date(),
+                    duration,
+                    size,
+                    markers
+                });
+                
+                // Save session data
+                localStorage.setItem('recordingSession', JSON.stringify({
+                    id: this.id,
+                    startTime: this.startTime,
+                    recordings: this.recordings
+                }));
+            }
+        };
+
+        // Enhanced cleanup function
+        async function cleanup() {
+            try {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                if (recorder) {
+                    if (recorder.state !== 'inactive') {
+                        recorder.stop();
+                    }
+                }
+                
+                // Clear data
+                recordedChunks = [];
+                markers = [];
+                if (recordingInterval) {
+                    clearInterval(recordingInterval);
+                }
+                
+                // Reset UI
+                document.getElementById("recordingStatus").innerText = "Ready to Record";
+                document.getElementById("startRecording").style.display = "inline-block";
+                document.getElementById("stopRecording").style.display = "none";
+                document.getElementById("markTime").disabled = true;
+                document.querySelector(".floating-preview").style.display = "none";
+                
+                // Clear preview
+                const previewVideo = document.getElementById("previewVideo");
+                if (previewVideo.srcObject) {
+                    previewVideo.srcObject = null;
+                }
+                
+                logger.info('Cleanup completed successfully');
+            } catch (error) {
+                logger.error('Error during cleanup', error);
+            }
+        }
+
+        // Initialize the application
+        async function initializeApp() {
+            try {
+                // Check HTTPS
+                if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+                    throw new Error('HTTPS is required for screen recording');
+                }
+                
+                // Check browser compatibility
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+                    throw new Error('Screen recording is not supported in this browser');
+                }
+                
+                // Check permissions
+                const permissions = await checkAndRequestPermissions();
+                logger.info('Permissions status:', permissions);
+                
+                // Check disk space
+                await checkDiskSpace();
+                
+                // Load previous session if exists
+                const savedSession = localStorage.getItem('recordingSession');
+                if (savedSession) {
+                    const sessionData = JSON.parse(savedSession);
+                    session.recordings = sessionData.recordings || [];
+                }
+                
+                // Initialize UI state
+                document.body.setAttribute("data-theme", darkMode ? "dark" : "light");
+                
+                logger.info('Application initialized successfully');
+                return true;
+            } catch (error) {
+                logger.error('Error initializing application', error);
+                document.getElementById("recordingStatus").innerText = `Error: ${error.message}`;
+                return false;
+            }
+        }
+
+        // Format recording for download
+        async function prepareRecordingForDownload(chunks, quality) {
+            try {
+                // Create initial blob
+                const blob = new Blob(chunks, { type: 'video/webm' });
+                
+                // Compress if file is too large (>100MB)
+                if (blob.size > 100 * 1024 * 1024) {
+                    return new Promise((resolve, reject) => {
+                        compressionWorker.onmessage = (e) => {
+                            if (e.data.success) {
+                                resolve(e.data.blob);
+                            } else {
+                                reject(new Error(e.data.error));
+                            }
+                        };
+                        compressionWorker.postMessage({ chunks, quality });
+                    });
+                }
+                
+                return blob;
+            } catch (error) {
+                logger.error('Error preparing recording for download', error);
+                throw error;
+            }
+        }
+
+        // Enhanced recording preview
+        function showRecordingPreview(blob) {
+            const previewModal = document.createElement('div');
+            previewModal.className = 'preview-modal';
+            previewModal.innerHTML = `
+                <div class="preview-content">
+                    <video controls src="${URL.createObjectURL(blob)}"></video>
+                    <div class="preview-controls">
+                        <button onclick="saveRecording()">Save</button>
+                        <button onclick="discardRecording()">Discard</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(previewModal);
+        }
+
+        // Initialize the application
+        initializeApp().then(success => {
+            if (!success) {
+                document.getElementById("startRecording").disabled = true;
+            }
+        });
+
+        // Handle page unload
+        window.addEventListener('beforeunload', (e) => {
+            if (recorder && recorder.state !== 'inactive') {
+                e.preventDefault();
+                e.returnValue = 'Recording in progress. Are you sure you want to leave?';
+            }
+        });
+
+        // Theme toggle
         document.getElementById("toggleTheme").addEventListener("click", function() {
             darkMode = !darkMode;
             document.body.setAttribute("data-theme", darkMode ? "dark" : "light");
         });
 
+        // Start recording
         document.getElementById("startRecording").addEventListener("click", async function() {
-            let videoQuality = document.getElementById("video-quality").value;
-            let audioInput = document.getElementById("audio-input").value;
-
-            let constraints = {
-                video: { frameRate: videoQuality === "hd" ? 30 : 15 },
-                audio: audioInput !== "none",
-            };
-
             try {
-                stream = await navigator.mediaDevices.getDisplayMedia(constraints);
-                recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+                // Clear previous recording data
+                await cleanup();
+                
+                // Check disk space
+                await checkDiskSpace();
+                
+                let videoQuality = document.getElementById("video-quality").value;
+                let audioInput = document.getElementById("audio-input").value;
 
+                // Update UI
+                document.getElementById("recordingStatus").innerText = "Initializing...";
+                document.getElementById("markTime").disabled = true;
+
+                let constraints = {
+                    video: { 
+                        frameRate: videoQuality === "hd" ? 30 : 15,
+                        width: videoQuality === "hd" ? 1920 : 1280,
+                        height: videoQuality === "hd" ? 1080 : 720
+                    },
+                    audio: audioInput !== "none"
+                };
+
+                // Get stream
+                stream = await navigator.mediaDevices.getDisplayMedia(constraints);
+                
+                // Set up MediaRecorder with error handling
+                try {
+                    recorder = new MediaRecorder(stream, { 
+                        mimeType: "video/webm;codecs=vp9,opus",
+                        videoBitsPerSecond: videoQuality === "hd" ? 2500000 : 1000000
+                    });
+                } catch (e) {
+                    recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+                }
+
+                // Show preview
                 document.querySelector(".floating-preview").style.display = "block";
                 document.getElementById("previewVideo").srcObject = stream;
 
-                recorder.ondataavailable = event => recordedChunks.push(event.data);
+                // Handle data
+                recorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                        
+                        // Check recording duration
+                        if (recordingDuration >= MAX_RECORDING_DURATION) {
+                            logger.warn('Maximum recording duration reached');
+                            recorder.stop();
+                        }
+                    }
+                };
                 
-                recorder.onstop = () => {
-                    const blob = new Blob(recordedChunks, { type: "video/webm" });
-                    const url = URL.createObjectURL(blob);
-
-                    document.getElementById("recordedVideo").src = url;
-                    document.getElementById("recordedVideo").style.display = "block";
-                    
-                    document.getElementById("downloadLink").href = url;
-                    document.getElementById("downloadLink").download = "screen-recording.webm";
-                    document.getElementById("downloadLink").innerText = "Download Recording";
-                    document.getElementById("downloadLink").style.display = "block";
-
-                    console.log("Markers:", markers);
+                // Handle errors
+                recorder.onerror = (event) => {
+                    logger.error('Recording error', event.error);
+                    cleanup();
+                    document.getElementById("recordingStatus").innerText = "Recording failed: " + event.error;
                 };
 
-                recorder.start();
-                document.getElementById("recordingStatus").innerText = "Recording...";
+                // Handle recording stop
+                recorder.onstop = async () => {
+                    try {
+                        clearInterval(recordingInterval);
+                        
+                        // Clean up old object URL
+                        const oldVideo = document.getElementById("recordedVideo");
+                        if (oldVideo.src) {
+                            URL.revokeObjectURL(oldVideo.src);
+                        }
+
+                        // Prepare recording
+                        const blob = await prepareRecordingForDownload(recordedChunks, videoQuality);
+                        const url = URL.createObjectURL(blob);
+
+                        // Update analytics
+                        analytics.recordingsCompleted++;
+                        analytics.lastRecordingSize = blob.size;
+                        analytics.totalDuration += recordingDuration;
+
+                        // Save to session
+                        session.addRecording(recordingDuration, blob.size, markers);
+
+                        // Show preview
+                        showRecordingPreview(blob);
+
+                        // Update UI
+                        document.getElementById("recordedVideo").src = url;
+                        document.getElementById("recordedVideo").style.display = "block";
+                        
+                        document.getElementById("downloadLink").href = url;
+                        document.getElementById("downloadLink").download = `screen-recording-${new Date().toISOString()}.webm`;
+                        document.getElementById("downloadLink").innerText = "Download Recording";
+                        document.getElementById("downloadLink").style.display = "block";
+
+                        // Cleanup
+                        await cleanup();
+                        
+                        logger.info('Recording completed successfully');
+                    } catch (error) {
+                        logger.error('Error processing recording', error);
+                        document.getElementById("recordingStatus").innerText = "Error processing recording";
+                    }
+                };
+
+                // Start recording
+                recorder.start(CHUNK_SIZE);
+                recordingStartTime = Date.now();
+                analytics.recordingsStarted++;
+                
+                // Update recording duration
+                recordingInterval = setInterval(() => {
+                    recordingDuration = Math.floor((Date.now() - recordingStartTime) / 1000);
+                    const remainingTime = MAX_RECORDING_DURATION - recordingDuration;
+                    
+                    document.getElementById("recordingStatus").innerText = 
+                        `Recording: ${Math.floor(recordingDuration / 60)}:${(recordingDuration % 60).toString().padStart(2, '0')} ` +
+                        `(${Math.floor(remainingTime / 60)}:${(remainingTime % 60).toString().padStart(2, '0')} remaining)`;
+                }, 1000);
+
+                // Enable controls
                 document.getElementById("startRecording").style.display = "none";
                 document.getElementById("stopRecording").style.display = "inline-block";
+                document.getElementById("markTime").disabled = false;
+
+                // Handle stream end
+                stream.getVideoTracks()[0].onended = () => {
+                    if (recorder && recorder.state !== 'inactive') {
+                        recorder.stop();
+                    }
+                };
+
+                logger.info('Recording started successfully');
             } catch (error) {
-                alert("Error: Unable to start recording. Check permissions.");
+                logger.error('Recording initialization error', error);
+                await cleanup();
+                document.getElementById("recordingStatus").innerText = "Failed to start recording";
+                alert("Error: Unable to start recording. " + error.message);
             }
         });
 
-        document.getElementById("markTime").addEventListener("click", function() {
-            markers.push(recorder.stream.getTracks()[0].enabled ? recordedChunks.length : null);
-            alert("Marker Added!");
+        // Stop recording
+        document.getElementById("stopRecording").addEventListener("click", function() {
+            if (recorder && recorder.state !== 'inactive') {
+                recorder.stop();
+            }
         });
 
+        // Mark time
+        document.getElementById("markTime").addEventListener("click", function() {
+            if (recorder && recorder.state === 'recording') {
+                const marker = {
+                    time: recordingDuration,
+                    chunk: recordedChunks.length,
+                    timestamp: new Date()
+                };
+                markers.push(marker);
+                
+                logger.info('Marker added', marker);
+                document.getElementById("recordingStatus").innerText += " (Marker added)";
+            }
+        });
+
+        // Close preview
         function closePreview() {
             document.querySelector(".floating-preview").style.display = "none";
         }
+
+        // Add CSS for new features
+        const style = document.createElement('style');
+        style.textContent = `
+            .preview-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            }
+
+            .preview-content {
+                background: var(--card-bg);
+                padding: 20px;
+                border-radius: 12px;
+                max-width: 80%;
+                max-height: 80%;
+                overflow: auto;
+            }
+
+            .preview-controls {
+                margin-top: 10px;
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+            .preview-controls button {
+                flex: 1;
+                padding: 10px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                color: white;
+                transition: background 0.3s;
+            }
+
+            .preview-controls button:first-child {
+                background: var(--button-bg);
+            }
+
+            .preview-controls button:last-child {
+                background: var(--record-button);
+            }
+
+            #diskSpaceWarning {
+                color: var(--record-button);
+                margin-top: 10px;
+                display: none;
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
